@@ -33,7 +33,6 @@ traccia_debug(L) :-
 	maplist(write,['\ntraccia debug:\n   '|L]),
 	read_command(['\nfine traccia debug: ']).
 
-
 read_command :-
 	readln(R),
 	(   R=[a|_] -> abort

@@ -31,28 +31,28 @@ open_pred(calc_usura(sezione,traiettoria,number,number)).
 % Q, calcola l'usura futura Q1
 % MODO (+,+,+,-) nondet.
 
-pred(succ(luogo,luogo)).
-% succ(L1, L2):  L2 è il luogo successivo a L1 se:
+pred(sez_succ(luogo,luogo)).
+% sez_succ(L1, L2): L2 è il luogo successivo a L1 se:
 %	- L1 (o L2) è un pit e L2 (o L1) è una sezione S dove c'è la pitlane
 %	- se L1 e L2 sono sezioni una dopo l'altra del tracciato
 %	- se L1 è la griglia e L2 è la prima sezione del tracciato
 %	- se L2 è il traguardo e L1 è l'ultima sezione del tracciato
 % MODO (?,?) nondet.
-succ(p(S,T),pit) :-
+sez_succ(p(S,T),pit) :-
 	pitlane_in(p(S,T)),
 	!.
-succ(pit, p(S,T)) :-
+sez_succ(pit, p(S,T)) :-
 	pitlane_out(p(S,T)),
 	!.
-succ(p(S1,T1),p(S2,T2)) :-
+sez_succ(p(S1,T1),p(S2,T2)) :-
 	tracciato(SS),
 	append(_, [S1|[S2|_]], SS),
 	cambio(T1,T2),
 	!.
-succ(griglia,p(S,_)) :-
+sez_succ(griglia,p(S,centrale)) :-
 	tracciato([S|_]),
 	!.
-succ(p(S,_),traguardo) :-
+sez_succ(p(S,_),traguardo) :-
 	tracciato(SS),
 	append(_,[S],SS),
 	!.
@@ -90,7 +90,7 @@ pred(giro(number)).
 
 %===============================================================================  ESECUZIONE AZIONI NEL MONDO
 
-type([schierati, parti(punto), guida(punto), pitin, pitstop, pitout, taglia_traguardo]:action).
+type([schierati, guida(punto), pitin, pitstop, pitout, completa_giro, taglia_traguardo]:action).
 %  le azioni
 type([schierato, partito(punto,number), spostamento(punto,punto,number), pitin, pistop(number), pitout(punto), giro, arrivato]:cambiamento).
 % schierato:
@@ -139,64 +139,76 @@ esecuzione(schierati) :-
 		[in(griglia),usura(0),pitstop(0),giro(0)],
 		schierato
 	).
-esecuzione(parti(p(S,T))) :-
-	in(griglia),
-	succ(griglia,p(S,T)),
-	not(avversario(p(S,T))),
-	check_usura(S,T,Q,Q1),
-	change(
-		[in(griglia),usura(Q),giro(0)],
-		[in(p(S,T)), usura(Q1), giro(1)],
-		partito(p(S,T),Q1)
-	).
 esecuzione(guida(p(S,T))) :-
-	in(p(S0,T0)),
-	succ(p(S0,T0),p(S,T)),
+	in(L),
+	sez_succ(L,p(S,T)),
 	not(avversario(p(S,T))),
 	check_usura(S,T,Q,Q1),
-	change(
-		[in(p(S0,T0)),usura(Q)],
-		[in(p(S,T)),usura(Q1)],
-		spostamento(p(S0,T0),p(S,T),Q1)
+	(
+		R0 = [in(L),usura(Q)],
+		A0 = [in(p(S,T)),usura(Q1)],
+		(
+			L = griglia ->  
+			R = [giro(0)|R0],
+			A = [giro(1)|A0],
+			C = partito(p(S,T),Q1)
+			;
+			R = R0,
+			A = A0,
+			C = spostamento(L,p(S,T),Q1)
+		),
+		change(R,A,C)
 	).
 esecuzione(pitin) :-
 	in(p(S,T)),
-	succ(p(S,T),pit),
-	retract(in(p(S,T))),
-	assert(in(pit)),
-	mostra(pitin).
+	sez_succ(p(S,T),pit),
+	change(
+		[in(p(S,T))],
+		[in(pit)],
+		pitin
+	).
 esecuzione(pitstop) :-
 	in(pit),
 	usura(Q),
 	pitstop(N),
 	N1 is N + 1,
-	retract(usura(Q)),
-	retract(pitstop(N)),
-	assert(usura(0)),
-	assert(pitstop(N1)),
-	mostra(pitstop(N1)).
+	change(
+		[usura(Q),pitstop(N)],
+		[usura(0),pitstop(N1)],
+		pitstop(N1)
+	).
 esecuzione(pitout) :-
 	in(pit),
-	succ(pit,p(S,T)),
-	retract(in(pit)),
-	assert(in(p(S,T))),
-	mostra(pitout(p(S,T))).
-esecuzione(taglia_traguardo) :-
+	sez_succ(pit,p(S,T)),
+	change(
+		[in(pit)],
+		[in(p(S,T))],
+		pitout(p(S,T))
+	).
+esecuzione(completa_giro) :-
 	in(p(S,T)),
-	succ(p(S,T),traguardo),
-	retract(in(p(S,T))),
+	sez_succ(p(S,T),traguardo),
 	giro(G),
 	giri(N),
-	( 
-		G =:= N -> assert(in(traguardo)), mostra(arrivato);
-		G1 is G+1, 
-		succ(griglia,p(S1,T1)),
-		retract(giro(G)),
-		assert(giro(G1)), 
-		assert(in(p(S1,T1))),
-		mostra(giro(G1))
+	G < N,
+	G1 is G + 1,
+	sez_succ(griglia,p(S1,T1)),
+	change(
+		[in(p(S,T)),giro(G)],
+		[in(p(S1,T1)),giro(G1)],
+		giro(G1)
 	).
-		
+esecuzione(taglia_traguardo) :-
+	in(p(S,T)),
+	sez_succ(p(S,T),traguardo),
+	giro(G),
+	giri(N),
+	G =:= N,
+	change(
+		[in(p(S,T))],
+		[in(traguardo)],
+		arrivato
+	).	
 
 %===============================================================================  UTILS
 
@@ -236,13 +248,9 @@ test([A|L]) :-
 	test(L).
 test([]).
 
-test_case(1, [schierati]).
-test_case(2, [schierati, parti(p(san_donato,centrale))]).
-test_case(3, [schierati, parti(p(san_donato,centrale)), guida(p(luco,interno))]).
-test_case(4, [schierati, parti(p(san_donato,centrale)), guida(p(luco,interno)), guida(p(1,esterno))]).
-test_case(5, [
+test_case(1, [
 	schierati,
-	parti(p(san_donato,centrale)),
+	guida(p(san_donato,centrale)),
 	guida(p(luco,interna)),
 	guida(p(1,centrale)),
 	guida(p(poggio_secco,interna)),
@@ -252,9 +260,9 @@ test_case(5, [
 	pitout,
 	taglia_traguardo
 ]).
-test_case(6, [
+test_case(2, [
 		schierati,
-		parti(p(san_donato,centrale)),
+		guida(p(san_donato,centrale)),
 		guida(p(luco,interna)),
 		guida(p(1,centrale)),
 		guida(p(poggio_secco,interna)),
@@ -262,7 +270,7 @@ test_case(6, [
 		pitin,
 		pitstop,
 		pitout,
-		taglia_traguardo,
+		completa_giro,
 		guida(p(luco,interna)),
 		guida(p(1,centrale)),
 		guida(p(poggio_secco,interna)),

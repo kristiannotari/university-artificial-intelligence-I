@@ -1,5 +1,6 @@
 :- consult('rrs/forward_planner').
 :- consult('rrs/strips').
+:- consult(mondo_macchina).
 :- multifile([type/1, pred/1, local_pred/1, open_pred/1, skipped/1, user_unit/1]).
 
 user_unit(pianificatore_macchina).
@@ -20,55 +21,54 @@ local_pred(add_del(action, p_node, list(fluent), list(fluent), number)).
 % implementa strips:add_del
 
 local_pred(h(p_node,number)).
-% implemenda forward_planner:h
-
-local_pred(sum(list(fluent),number,number,number)).
-% sum(Fluents, N1, N2, C) :
-% C è la capacità dell'aspirapolvere.
-% per ogni sporco(S,Q) in Fluents, somma a N1:
-% Q + distanza_balcone(S)*(Q div C + 1)
-% cioè la quantità Q di sporco nella stanza S + il
-% numero di viaggi necessari per portare Q in pattumiera
-% (dato da Q div C + 1) moltiplicato per la distanza di S dal
-% balcone
-
-local_pred(sum_stanza(fluent, number, number, number)).
-%   sum_stanza(sporco(S,Q),N1,N2,C) : C � la capacit�
-%   dell'aspirapolvere; N2 = N1 + Q + distanza_balcone(S)*(Q div C + 1)
+% implementa forward_planner:h
 
 %pred(add_del(action, p_node, list(fluent), list(fluent), number)).
 %   IMPLEMENTA strips:add_del
 
-add_del(pulisci(Q1), St,  [sporco(S,Q2),raccolto(R1)], [sporco(S,Q),raccolto(R)], Q) :-
-	member(in(S), St),
-	member(sporco(S,Q), St),
-	Q > 0,
-	capacita(C),
-	member(raccolto(R),St),
-	R < C,
-	Q1 is min(Q, C-R),
-	Q2 is Q-Q1,
-	R1 is R+Q1.
-add_del(va(S), St, [in(S)], [in(SPrec)], 1) :-
-	member(in(SPrec), St),
-	comunica(SPrec,S)
-	,
-	(   SPrec = balcone
-	;   member(raccolto(R), St),
-	    capacita(C),
-	    member(sporco(SPrec,Q), St),
-	    not((Q>0,R<C))
-	).
-add_del(versa_sporco, St,  [raccolto(0)], [raccolto(R)], R) :-
-	member(in(balcone), St),
-	member(raccolto(R), St).
-
+add_del(guida(p(S,T)),Stato,[giro(1),in(p(S,T)),usura(Q1)],[giro(0),in(griglia),usura(Q)],Costo) :-
+	member(in(griglia),Stato),
+	sez_succ(griglia,p(S,T)),
+	not(avversario(p(S,T))),
+	check_usura(S,T,Q,Q1),
+	Costo is Q1 - Q.
+add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1)],[in(p(S0,T0)),usura(Q)],Costo) :-
+	member(in(p(S0,T0)),Stato),
+	sez_succ(p(S0,T0),p(S,T)),
+	not(avversario(p(S,T))),
+	check_usura(S,T,Q,Q1),
+	Costo is Q1 - Q.
+add_del(pitin,Stato,[in(pit)],[in(p(S,T))],1) :-
+	member(in(p(S,T)),Stato),
+	sez_succ(p(S,T),pit).
+add_del(pitstop,Stato,[usura(0),pitstop(N1)],[usura(Q),pitstop(N)],Costo) :-
+	member(in(pit),Stato),
+	member(usura(Q),Stato),
+	member(pitstop(N)),
+	N1 is N + 1,
+	Costo is Q * 1.
+add_del(pitin,Stato,[in(p(S,T))],[in(pit)],1) :-
+	member(in(pit),Stato),
+	sez_succ(pit,p(S,T)).
+add_del(completa_giro,Stato,[in(p(S1,T1)),giro(G1)],[in(p(S,T)),giro(G)],1) :-
+	member(in(p(S,T)),Stato),
+	sez_succ(p(S,T),traguardo),
+	member(giro(G)),
+	giri(N),
+	G < N,
+	G1 is G+1,
+	sez_succ(griglia,p(S1,T1)).
+add_del(taglia_traguardo,Stato,[in(traguardo)],[in(p(S,T))],1) :-
+	member(in(p(S,T)),Stato),
+	sez_succ(p(S,T),traguardo),
+	member(giro(G)),
+	giri(N),
+	G =:= N.
 
 %=============================================================================== EURISTICHE
 % i commenti avete l'euristica 0, quella di base sottostimata
 % e con la propietà triangolare, quella resa aggressiva moltiplicando
 % per 4, non più sottostimata
-
 
 h(_St,0) :- !.
 
@@ -107,19 +107,21 @@ pred(piano(decisione_complessa, list(action), number)).
 % piano(Dec,Plan,C): pianifica piano di costo C che attua la decisione Dec
 % MODO (++,--,--) nondet
 
-stato_iniziale(St) :-
-	setof(sporco(S,Q), sporco(S,Q) , ListSporco),
-	in(Stanza),
-	raccolto(R),
-	list_to_ord_set([in(Stanza),raccolto(R)|ListSporco], St).
-stato_goal(S) :-
-	member(in(balcone),S),
-	member(raccolto(0),S),
-	not((member(sporco(_,Q),S), Q > 0)), !.
+stato_iniziale(Stato) :-
+	list_to_ord_set([in(griglia),usura(0),pitstop(0),giro(0)],Stato).
+stato_goal(Stato) :-
+	member(in(p(san_donato,centrale)),Stato).
+	% member(in(traguardo),Stato).
+	% member(usura(Q),Stato),
+	% usura_massima(Qmax),
+	% Q =< Qmax,
+	% member(giro(G),Stato),
+	% giri(N),
+	% G =:= N.
 
 % Uso i predicati stato_iniziale/1 e stato_goal/1 per passare stato iniziale e
 % stato goal al planner
-piano(esegui_pulizia, Plan, Cost) :-
+piano(gareggia, Plan, Cost) :-
 	plan(stato_iniziale,
 	     stato_goal,
 			     [_Sin|_Path],
@@ -133,16 +135,15 @@ test(K, Cost, Plan) :-
 	plan(stato_iniziale(K), stato_goal, _Path,_,Plan, Cost).
 
 stato_iniziale(1, S) :-
-   consult(mondo1),
-   list_to_ord_set([in(balcone),raccolto(0),
-		    sporco(a,16), sporco(b,20), sporco(c,15), sporco(d,5)], S).
+   consult(mondi/mondo1),
+   list_to_ord_set([in(griglia),usura(0),pitstop(0),giro(0)],S).
 stato_iniziale(2, S) :-
-    consult(mondo1),
+    consult(mondi/mondo1),
    list_to_ord_set([in(balcone),raccolto(0),
 		    sporco(a,66), sporco(b,30), sporco(c,35), sporco(d,50)], S).
 
 stato_iniziale(3, S) :-
-    consult(mondo2),
+    consult(mondi/mondo2),
    list_to_ord_set([in(balcone),raccolto(0),
 		    sporco(a,66), sporco(b,30), sporco(c,35), sporco(d,40),sporco(e,20)], S).
 

@@ -9,7 +9,7 @@
 
 
 user_unit(decisore).
-%  Unità che contiene una bozza primitiva di agente decisore e
+%  UnitÃ  che contiene una bozza primitiva di agente decisore e
 %  ne fornisce il comportamento.
 %  Usa come tipi aperti state (gli stati interni dell'agente),
 %  action (le azioni dell'agente), decisione_complessa (le decisoni
@@ -30,10 +30,10 @@ user_unit(decisore).
 %
 %  - tratta_decisione_impossibile(Dec,St1,St2) :  Dec non ha piano
 %  esecutivo nello stato interno St1:  St2 accumula la conoscenza
-%  della impossibilità di Dec
+%  della impossibilitÃ  di Dec
 
 type(open:state).
-% stato interno, può accumulare conoscenza ed esperienza passata
+% stato interno, puÃ² accumulare conoscenza ed esperienza passata
 type(open:decisione_complessa).
 % decisioni che richiedono pianificazione
 type(open:action).
@@ -42,7 +42,7 @@ type([do(list(action)),{decisione_complessa}]:decisione).
 % decisioni
 open_pred(decidi(state,decisione)).
 %   decidi(S,D) :   prendi la decisione D nello stato S corrente
-%   MODO(++,--)   det     (nondet in caso di un agente «erratico»)
+%   MODO(++,--)   det     (nondet in caso di un agente ï¿½erraticoï¿½)
 open_pred(do_action(action,state,state)).
 %  do_action(A,S1,S2)  :  esegui A nello stato S1 con transizione a S2.
 %  MODO(++,++,--) det   (nondet con azioni con effetto non deterministico)
@@ -51,14 +51,14 @@ open_pred(pianifica(decisione,state,list(action),number)).
 %  decisone D.    MODO (++,++,--,--)  nondet
 open_pred(tratta_decisione_impossibile(decisione,state,state)).
 %  tratta_decisione_impossibile(D,S1,S2)  :   S2 nuovo stato di conscenza,
-%   sapendo che D è impossibile nello stato S1.    MODO (++,++,--) det
+%   sapendo che D Ã¨ impossibile nello stato S1.    MODO (++,++,--) det
 
 
 pred(decisore(state)).
-% decisore(S): produce il comportamento dell’agente a partire dallo stato
+% decisore(S): produce il comportamento dell'agente a partire dallo stato
 % S. PROCESSO
 local_pred(attua(decisione, state, state)).
-%   attua(D,S1,S2) : attua la decisione D nello stato S1;   alla fine si avrà lo stato S2
+%   attua(D,S1,S2) : attua la decisione D nello stato S1;   alla fine si avrÃ  lo stato S2
 %   MODO  (++,++,--) det   (nondet per agenti erratici o azioni con effetto non deterministico)
 local_pred(do(list(action), state, state)).
 %   do(ActionList,S1,S2) : esegue sequenzialmente ActionList, con passaggio da S1 a S2
