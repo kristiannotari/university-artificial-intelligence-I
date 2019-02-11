@@ -18,22 +18,22 @@ mostra(schierato) :- !,
 	writeln('schieramento:'),
 	write('\tmacchina(griglia)'),
 	forall(avversario(p(S,T)), (write(',\n\t'), write(avversario(S,T)))).
-mostra(partito(p(S,T))) :- !,
+mostra(partito(p(S,T),Q)) :- !,
 	step,
 	giri(N),
-	maplist(write, ['partita la gara (giro 1/', N, ')\n\tparto e vado in ', S, '[', T , ']']).
-mostra(spostamento(p(S1,T1),p(S2,T2))) :- !,
+	maplist(write, ['iniziata la gara (giro 1/', N, ')\n\tparto e vado in ', S, '[', T , '] (usura=', Q, ')']).
+mostra(spostamento(p(S1,T1),p(S2,T2),Q)) :- !,
 	step,
-	maplist(write, ['passo da ', S1, '[', T1 , '] a ', S2, '[', T2, ']']).
+	maplist(write, ['guido da ', S1, '[', T1 , '] a ', S2, '[', T2, '] (usura=', Q, ')']).
 mostra(pitin) :- !,
 	step,
 	write('entro ai pit').
-mostra(pitstop) :- !,
+mostra(pitstop(N)) :- !,
 	step,
-	write('eseguo pitstop (usura pneumatici torna a 0)').
+	maplist(write, ['eseguo pitstop (usura pneumatici torna a 0, pitstop effettuati=', N, ')']).
 mostra(pitout(p(S,T))) :- !,
 	step,
-	maplist(write, ['esco dai pit e ritorno in ', S, '[', T , ']']).
+	maplist(write, ['esco dai pit e rientro in ', S, '[', T , ']']).
 mostra(giro(G)) :- !,
 	step,
 	giri(N),

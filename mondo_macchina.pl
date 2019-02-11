@@ -5,15 +5,13 @@
 
 user_unit(mondo_macchina).
 % Unità che fornisce il mondo costituito dal tracciato, con le sue sezioni e
-% traiettorie e dalle macchine e le loro azioni e ontiene:
+% traiettorie e dalle macchine e le loro azioni e contiene:
 %	- un modello virtuale del mondo esterno (parte statica in un mondo nella
 %	cartella "mondi" e parte dinamica in mondo_macchina.pl)
-% 	- una implementazione delle azioni nel mondo virtuale (predicati esecuzione
+% 	- un'implementazione delle azioni nel mondo virtuale (predicati esecuzione
 %	e mostra)
 
-type(open:curva).
-type(open:rettilineo).
-type({curva,rettilineo}:sezione).
+type(open:sezione).
 type(open:traiettoria).
 type(p(sezione,traiettoria):punto).
 type([griglia,traguardo,pit,punto]:luogo).
@@ -26,6 +24,12 @@ open_pred(pitlane_out(punto)).
 % pitlane_out(p(S,T)): uscendo dai pit si passa alla sezione S in traiettoria T
 open_pred(avversario(punto)).
 % avversario(p(S,T)): c'è un avversario nella sezione S in traiettoria T
+open_pred(cambio(traiettoria,traiettoria)).
+% cambio(T1,T2): se è possibile lo spostamento da T1 a T2
+open_pred(calc_usura(sezione,traiettoria,number,number)).
+% calc_usura(S,T,Q,Q1): data una sezione S, una traiettoria T e un'usura attuale
+% Q, calcola l'usura futura Q1
+% MODO (+,+,+,-) nondet.
 
 pred(succ(luogo,luogo)).
 % succ(L1, L2):  L2 è il luogo successivo a L1 se:
@@ -53,9 +57,6 @@ succ(p(S,_),traguardo) :-
 	append(_,[S],SS),
 	!.
 
-open_pred(cambio(traiettoria,traiettoria)).
-% cambio(T1,T2): se è possibile lo spostamento da T1 a T2
-
 pred(usura_massima(number)).
 % usura_massima(Q): Q quantità massima di usura degli pneumatici della macchina
 % MODO (?) semidet.
@@ -78,6 +79,10 @@ pred(usura(number)).
 %  usura(Q) : Q quantità di usura degli pneumatici
 %  MODO (?) semidet.
 :- dynamic(usura/1).
+pred(pitstop(number)).
+%  pitstop(N) : N numero di pitstop effettuati
+%  MODO (?) semidet.
+:- dynamic(usura/1).
 pred(giro(number)).
 %  giro(N) : N numero del giro in corso
 %  MODO (?) semidet.
@@ -87,18 +92,19 @@ pred(giro(number)).
 
 type([schierati, parti(punto), guida(punto), pitin, pitstop, pitout, taglia_traguardo]:action).
 %  le azioni
-type([schierato, partito(punto), spostamento(punto,punto), pitin, pistop, pitout(punto), giro, arrivato]:cambiamento).
+type([schierato, partito(punto,number), spostamento(punto,punto,number), pitin, pistop(number), pitout(punto), giro, arrivato]:cambiamento).
 % schierato:
 %	la macchina viene schierata in griglia pronta a partire
-% partito(p(S,T)):
-%	la macchina dalla griglia passa alla sezione S in traiettoria T
-% spostamento(p(S1,T1),p(S2,T2)):
+% partito(p(S,T),Q):
+%	la macchina dalla griglia passa alla sezione S in traiettoria T, Q è la
+%	nuova usura
+% spostamento(p(S1,T1),p(S2,T2),Q):
 %	la macchina passa alla sezione S1 in traiettoria T1 alla sezione S2 in
-%	traiettoria T2
+%	traiettoria T2, e Q è la nuova usura
 % pitin: 
 %	la macchina passa dal punto in cui si trova ai pit
-% pitstop: 
-%	la macchina esegue il pitstop ai pit
+% pitstop(N): 
+%	la macchina esegue il pitstop ai pit, effettuati N pitstop nella gara
 % pitout(p(S,T)): 
 %	la macchina passa dai pit alla sezione S in traiettoria T
 % giro:
@@ -122,29 +128,37 @@ skipped(nb_getval/2).
 clear_db :-
 	retractall(in(_)),
 	retractall(usura(_)),
+	retractall(pitstop(_)),
 	retractall(giro(_)),
 	nb_setval(step,0).
 
 esecuzione(schierati) :-
 	clear_db,
-	assert(in(griglia)),
-	assert(usura(0)),
-	mostra(schierato).
+	change(
+		[],
+		[in(griglia),usura(0),pitstop(0),giro(0)],
+		schierato
+	).
 esecuzione(parti(p(S,T))) :-
 	in(griglia),
 	succ(griglia,p(S,T)),
 	not(avversario(p(S,T))),
-	retract(in(griglia)),
-	assert(in(p(S,T))),
-	assert(giro(1)),
-	mostra(partito(p(S,T))).
+	check_usura(S,T,Q,Q1),
+	change(
+		[in(griglia),usura(Q),giro(0)],
+		[in(p(S,T)), usura(Q1), giro(1)],
+		partito(p(S,T),Q1)
+	).
 esecuzione(guida(p(S,T))) :-
 	in(p(S0,T0)),
 	succ(p(S0,T0),p(S,T)),
 	not(avversario(p(S,T))),
-	retract(in(p(S0,T0))),
-	assert(in(p(S,T))),
-	mostra(spostamento(p(S0,T0),p(S,T))).
+	check_usura(S,T,Q,Q1),
+	change(
+		[in(p(S0,T0)),usura(Q)],
+		[in(p(S,T)),usura(Q1)],
+		spostamento(p(S0,T0),p(S,T),Q1)
+	).
 esecuzione(pitin) :-
 	in(p(S,T)),
 	succ(p(S,T),pit),
@@ -154,9 +168,13 @@ esecuzione(pitin) :-
 esecuzione(pitstop) :-
 	in(pit),
 	usura(Q),
+	pitstop(N),
+	N1 is N + 1,
 	retract(usura(Q)),
+	retract(pitstop(N)),
 	assert(usura(0)),
-	mostra(pitstop).
+	assert(pitstop(N1)),
+	mostra(pitstop(N1)).
 esecuzione(pitout) :-
 	in(pit),
 	succ(pit,p(S,T)),
@@ -179,6 +197,28 @@ esecuzione(taglia_traguardo) :-
 		mostra(giro(G1))
 	).
 		
+
+%===============================================================================  UTILS
+
+pred(change(list,list,cambiamento)).
+% change(R,A,C): effettua la transizione di stato facendo il retract su R, lo
+%	assert su A e mostrando il cambiamento C
+% MODO: (?,?,?) nondet.
+change(R,A,C) :-
+	maplist(retract, R),
+	maplist(assert, A),
+	mostra(C).
+pred(check_usura(sezione,traiettoria,number,number)).
+% check_usura(S,T,Q,Q1): data una sezione S e una traiettoria T, restituisce la
+%	usura attuale Q e l'usura futura Q1, controllando che non si superi la
+%	massima usura
+% MODO: (+,+,-,-) semidet.
+check_usura(S,T,Q,Q1) :-
+	usura(Q),
+	calc_usura(S,T,Q,Q1),
+	usura_massima(Qmax),
+	Q1 =< Qmax.
+	
 
 %===============================================================================  TESTING
 	
@@ -212,3 +252,20 @@ test_case(5, [
 	pitout,
 	taglia_traguardo
 ]).
+test_case(6, [
+		schierati,
+		parti(p(san_donato,centrale)),
+		guida(p(luco,interna)),
+		guida(p(1,centrale)),
+		guida(p(poggio_secco,interna)),
+		guida(p(2,interna)),
+		pitin,
+		pitstop,
+		pitout,
+		taglia_traguardo,
+		guida(p(luco,interna)),
+		guida(p(1,centrale)),
+		guida(p(poggio_secco,interna)),
+		guida(p(2,interna)),
+		taglia_traguardo
+	]).
