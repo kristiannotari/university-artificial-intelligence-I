@@ -30,6 +30,9 @@ open_pred(calc_usura(sezione,traiettoria,number,number)).
 % calc_usura(S,T,Q,Q1): data una sezione S, una traiettoria T e un'usura attuale
 % Q, calcola l'usura futura Q1
 % MODO (+,+,+,-) nondet.
+open_pred(giri(number)).
+% giri(N): N numero di giri da effettuare
+% MODO (?) semidet.
 
 pred(sez_succ(luogo,luogo)).
 % sez_succ(L1, L2): L2 è il luogo successivo a L1 se:
@@ -39,33 +42,23 @@ pred(sez_succ(luogo,luogo)).
 %	- se L2 è il traguardo e L1 è l'ultima sezione del tracciato
 % MODO (?,?) nondet.
 sez_succ(p(S,T),pit) :-
-	pitlane_in(p(S,T)),
-	!.
-sez_succ(pit, p(S,T)) :-
-	pitlane_out(p(S,T)),
-	!.
+	pitlane_in(p(S,T)).
+sez_succ(pit,p(S,T)) :-
+	pitlane_out(p(S,T)).
 sez_succ(p(S1,T1),p(S2,T2)) :-
 	tracciato(SS),
 	append(_, [S1|[S2|_]], SS),
-	cambio(T1,T2),
-	!.
-sez_succ(griglia,p(S,centrale)) :-
-	tracciato([S|_]),
-	!.
+	cambio(T1,T2).
+sez_succ(griglia,p(S,_)) :-
+	tracciato([S|_]).
 sez_succ(p(S,_),traguardo) :-
 	tracciato(SS),
-	append(_,[S],SS),
-	!.
+	append(_,[S],SS).
 
 pred(usura_massima(number)).
 % usura_massima(Q): Q quantità massima di usura degli pneumatici della macchina
 % MODO (?) semidet.
 usura_massima(10).
-
-pred(giri(number)).
-% giri(N): N numero di giri da effettuare
-% MODO (?) semidet.
-giri(2).
 
 :- consult(mondi/mondo1).
 
@@ -81,7 +74,7 @@ pred(usura(number)).
 :- dynamic(usura/1).
 pred(pitstop(number)).
 %  pitstop(N) : N numero di pitstop effettuati
-%  MODO (?) semidet.
+%  MODO (?) semidet.p
 :- dynamic(usura/1).
 pred(giro(number)).
 %  giro(N) : N numero del giro in corso
@@ -90,9 +83,9 @@ pred(giro(number)).
 
 %===============================================================================  ESECUZIONE AZIONI NEL MONDO
 
-type([schierati, guida(punto), pitin, pitstop, pitout, completa_giro, taglia_traguardo]:action).
+type([schierati, guida(punto), pitstop, completa_giro, taglia_traguardo]:action).
 %  le azioni
-type([schierato, partito(punto,number), spostamento(punto,punto,number), pitin, pistop(number), pitout(punto), giro, arrivato]:cambiamento).
+type([schierato, partito(punto,number), spostamento(punto,punto,number), pistop(number,punto), giro, arrivato]:cambiamento).
 % schierato:
 %	la macchina viene schierata in griglia pronta a partire
 % partito(p(S,T),Q):
@@ -101,12 +94,8 @@ type([schierato, partito(punto,number), spostamento(punto,punto,number), pitin, 
 % spostamento(p(S1,T1),p(S2,T2),Q):
 %	la macchina passa alla sezione S1 in traiettoria T1 alla sezione S2 in
 %	traiettoria T2, e Q è la nuova usura
-% pitin: 
-%	la macchina passa dal punto in cui si trova ai pit
 % pitstop(N): 
 %	la macchina esegue il pitstop ai pit, effettuati N pitstop nella gara
-% pitout(p(S,T)): 
-%	la macchina passa dai pit alla sezione S in traiettoria T
 % giro:
 %	la macchina completa un giro passando dall'ultima sezione del tracciato al 
 %	traguardo
@@ -159,31 +148,17 @@ esecuzione(guida(p(S,T))) :-
 		),
 		change(R,A,C)
 	).
-esecuzione(pitin) :-
-	in(p(S,T)),
-	sez_succ(p(S,T),pit),
-	change(
-		[in(p(S,T))],
-		[in(pit)],
-		pitin
-	).
 esecuzione(pitstop) :-
-	in(pit),
+	in(p(S0,T0)),
+	sez_succ(p(S0,T0),pit),
+	sez_succ(pit,p(S1,T1)),
 	usura(Q),
 	pitstop(N),
 	N1 is N + 1,
 	change(
-		[usura(Q),pitstop(N)],
-		[usura(0),pitstop(N1)],
-		pitstop(N1)
-	).
-esecuzione(pitout) :-
-	in(pit),
-	sez_succ(pit,p(S,T)),
-	change(
-		[in(pit)],
-		[in(p(S,T))],
-		pitout(p(S,T))
+		[usura(Q),pitstop(N),in(p(S0,T0))],
+		[usura(0),pitstop(N1),in(p(S1,T1))],
+		pitstop(N1,p(S1,T1))
 	).
 esecuzione(completa_giro) :-
 	in(p(S,T)),
@@ -220,6 +195,7 @@ change(R,A,C) :-
 	maplist(retract, R),
 	maplist(assert, A),
 	mostra(C).
+
 pred(check_usura(sezione,traiettoria,number,number)).
 % check_usura(S,T,Q,Q1): data una sezione S e una traiettoria T, restituisce la
 %	usura attuale Q e l'usura futura Q1, controllando che non si superi la
@@ -230,7 +206,6 @@ check_usura(S,T,Q,Q1) :-
 	calc_usura(S,T,Q,Q1),
 	usura_massima(Qmax),
 	Q1 =< Qmax.
-	
 
 %===============================================================================  TESTING
 	
@@ -255,9 +230,7 @@ test_case(1, [
 	guida(p(1,centrale)),
 	guida(p(poggio_secco,interna)),
 	guida(p(2,interna)),
-	pitin,
 	pitstop,
-	pitout,
 	taglia_traguardo
 ]).
 test_case(2, [
@@ -267,9 +240,27 @@ test_case(2, [
 		guida(p(1,centrale)),
 		guida(p(poggio_secco,interna)),
 		guida(p(2,interna)),
-		pitin,
 		pitstop,
-		pitout,
+		completa_giro,
+		guida(p(luco,interna)),
+		guida(p(1,centrale)),
+		guida(p(poggio_secco,interna)),
+		guida(p(2,interna)),
+		taglia_traguardo
+	]).
+test_case(3, [
+		schierati,
+		guida(p(san_donato,centrale)),
+		guida(p(luco,interna)),
+		guida(p(1,centrale)),
+		guida(p(poggio_secco,interna)),
+		guida(p(2,interna)),
+		pitstop,
+		completa_giro,
+		guida(p(luco,interna)),
+		guida(p(1,centrale)),
+		guida(p(poggio_secco,interna)),
+		guida(p(2,interna)),
 		completa_giro,
 		guida(p(luco,interna)),
 		guida(p(1,centrale)),

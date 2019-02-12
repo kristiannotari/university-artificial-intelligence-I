@@ -23,37 +23,33 @@ local_pred(add_del(action, p_node, list(fluent), list(fluent), number)).
 local_pred(h(p_node,number)).
 % implementa forward_planner:h
 
-%pred(add_del(action, p_node, list(fluent), list(fluent), number)).
-%   IMPLEMENTA strips:add_del
+% pred(add_del(action, p_node, list(fluent), list(fluent), number)).
+% IMPLEMENTA strips:add_del
 
-add_del(guida(p(S,T)),Stato,[giro(1),in(p(S,T)),usura(Q1)],[giro(0),in(griglia),usura(Q)],Costo) :-
+add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1),giro(1)],[in(griglia),usura(Q),giro(0)],Costo) :-
 	member(in(griglia),Stato),
 	sez_succ(griglia,p(S,T)),
 	not(avversario(p(S,T))),
-	check_usura(S,T,Q,Q1),
+	check_usura_stato(Stato,S,T,Q,Q1),
 	Costo is Q1 - Q.
 add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1)],[in(p(S0,T0)),usura(Q)],Costo) :-
 	member(in(p(S0,T0)),Stato),
 	sez_succ(p(S0,T0),p(S,T)),
 	not(avversario(p(S,T))),
-	check_usura(S,T,Q,Q1),
+	check_usura_stato(Stato,S,T,Q,Q1),
 	Costo is Q1 - Q.
-add_del(pitin,Stato,[in(pit)],[in(p(S,T))],1) :-
-	member(in(p(S,T)),Stato),
-	sez_succ(p(S,T),pit).
-add_del(pitstop,Stato,[usura(0),pitstop(N1)],[usura(Q),pitstop(N)],Costo) :-
-	member(in(pit),Stato),
+add_del(pitstop,Stato,[usura(0),pitstop(N1),in(p(S1,T1))],[usura(Q),pitstop(N),in(p(S0,T0))],Costo) :-
+	member(in(p(S0,T0)),Stato),
+	sez_succ(p(S0,T0),pit),
+	sez_succ(pit,p(S1,T1)),
 	member(usura(Q),Stato),
-	member(pitstop(N)),
+	member(pitstop(N),Stato),
 	N1 is N + 1,
 	Costo is Q * 1.
-add_del(pitin,Stato,[in(p(S,T))],[in(pit)],1) :-
-	member(in(pit),Stato),
-	sez_succ(pit,p(S,T)).
 add_del(completa_giro,Stato,[in(p(S1,T1)),giro(G1)],[in(p(S,T)),giro(G)],1) :-
 	member(in(p(S,T)),Stato),
 	sez_succ(p(S,T),traguardo),
-	member(giro(G)),
+	member(giro(G),Stato),
 	giri(N),
 	G < N,
 	G1 is G+1,
@@ -61,9 +57,19 @@ add_del(completa_giro,Stato,[in(p(S1,T1)),giro(G1)],[in(p(S,T)),giro(G)],1) :-
 add_del(taglia_traguardo,Stato,[in(traguardo)],[in(p(S,T))],1) :-
 	member(in(p(S,T)),Stato),
 	sez_succ(p(S,T),traguardo),
-	member(giro(G)),
+	member(giro(G),Stato),
 	giri(N),
 	G =:= N.
+
+%=============================================================================== UTILS
+
+pred(check_usura_state(p_node,sezione,traiettoria,number,number)).
+% come check_usura di mondo_macchina ma controllo usura come fluente dello stato
+check_usura_stato(Stato,S,T,Q,Q1) :-
+	member(usura(Q),Stato),
+	calc_usura(S,T,Q,Q1),
+	usura_massima(Qmax),
+	Q1 =< Qmax.
 
 %=============================================================================== EURISTICHE
 % i commenti avete l'euristica 0, quella di base sottostimata
@@ -88,8 +94,6 @@ h(_St,0) :- !.
 % 	distanza_balcone(S,D),
 % 	Sum2 is Sum1 + Q + D*(Q div C + 1).
 
-
-
 %=============================================================================== PIANIFICAZIONE E START-GOAL
 
 local_pred(stato_iniziale(list(fluent))).
@@ -108,10 +112,11 @@ pred(piano(decisione_complessa, list(action), number)).
 % MODO (++,--,--) nondet
 
 stato_iniziale(Stato) :-
+	% list_to_ord_set([in(griglia),usura(0),pitstop(0),giro(0)],Stato).
 	list_to_ord_set([in(griglia),usura(0),pitstop(0),giro(0)],Stato).
 stato_goal(Stato) :-
-	member(in(p(san_donato,centrale)),Stato).
-	% member(in(traguardo),Stato).
+	member(in(p(san_donato,centrale)),Stato),
+	member(giro(2),Stato).
 	% member(usura(Q),Stato),
 	% usura_massima(Qmax),
 	% Q =< Qmax,

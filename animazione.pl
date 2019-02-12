@@ -25,15 +25,9 @@ mostra(partito(p(S,T),Q)) :- !,
 mostra(spostamento(p(S1,T1),p(S2,T2),Q)) :- !,
 	step,
 	maplist(write, ['guido da ', S1, '[', T1 , '] a ', S2, '[', T2, '] (usura=', Q, ')']).
-mostra(pitin) :- !,
+mostra(pitstop(N,p(S,T))) :- !,
 	step,
-	write('entro ai pit').
-mostra(pitstop(N)) :- !,
-	step,
-	maplist(write, ['eseguo pitstop (usura pneumatici torna a 0, pitstop effettuati=', N, ')']).
-mostra(pitout(p(S,T))) :- !,
-	step,
-	maplist(write, ['esco dai pit e rientro in ', S, '[', T , ']']).
+	maplist(write, ['eseguo pitstop (usura pneumatici torna a 0, pitstop effettuati=', N, ')\n\tesco dai pit in ', S, '[', T , ']']).
 mostra(giro(G)) :- !,
 	step,
 	giri(N),
