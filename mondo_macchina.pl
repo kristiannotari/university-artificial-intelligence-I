@@ -83,9 +83,9 @@ pred(giro(number)).
 
 %===============================================================================  ESECUZIONE AZIONI NEL MONDO
 
-type([schierati, guida(punto), pitstop, completa_giro, taglia_traguardo]:action).
+type([schierati, guida(punto), effettua_pitstop, completa_giro, taglia_traguardo]:action).
 %  le azioni
-type([schierato, partito(punto,number), spostamento(punto,punto,number), pistop(number,punto), giro, arrivato]:cambiamento).
+type([schierato, partito(punto,number), spostamento(punto,punto,number), fermato_ai_pit(number,number,punto), giro, arrivato]:cambiamento).
 % schierato:
 %	la macchina viene schierata in griglia pronta a partire
 % partito(p(S,T),Q):
@@ -94,8 +94,9 @@ type([schierato, partito(punto,number), spostamento(punto,punto,number), pistop(
 % spostamento(p(S1,T1),p(S2,T2),Q):
 %	la macchina passa alla sezione S1 in traiettoria T1 alla sezione S2 in
 %	traiettoria T2, e Q è la nuova usura
-% pitstop(N): 
-%	la macchina esegue il pitstop ai pit, effettuati N pitstop nella gara
+% fermato_ai_pit(G,N,p(S,T)): 
+%	la macchina esegue il pitstop ai pit, effettuati N pitstop nella gara, e 
+%	rientra nella sezione S in traiettoria T nel corso del Gesimo giro
 % giro:
 %	la macchina completa un giro passando dall'ultima sezione del tracciato al 
 %	traguardo
@@ -148,17 +149,19 @@ esecuzione(guida(p(S,T))) :-
 		),
 		change(R,A,C)
 	).
-esecuzione(pitstop) :-
+esecuzione(effettua_pitstop) :-
 	in(p(S0,T0)),
 	sez_succ(p(S0,T0),pit),
 	sez_succ(pit,p(S1,T1)),
 	usura(Q),
+	giro(G),
 	pitstop(N),
 	N1 is N + 1,
+	G1 is G + 1,
 	change(
-		[usura(Q),pitstop(N),in(p(S0,T0))],
-		[usura(0),pitstop(N1),in(p(S1,T1))],
-		pitstop(N1,p(S1,T1))
+		[usura(Q),pitstop(N),in(p(S0,T0)),giro(G)],
+		[usura(0),pitstop(N1),in(p(S1,T1)),giro(G1)],
+		fermato_ai_pit(G1,N1,p(S1,T1))
 	).
 esecuzione(completa_giro) :-
 	in(p(S,T)),
@@ -240,8 +243,7 @@ test_case(2, [
 		guida(p(1,centrale)),
 		guida(p(poggio_secco,interna)),
 		guida(p(2,interna)),
-		pitstop,
-		completa_giro,
+		effettua_pitstop,
 		guida(p(luco,interna)),
 		guida(p(1,centrale)),
 		guida(p(poggio_secco,interna)),
@@ -255,8 +257,7 @@ test_case(3, [
 		guida(p(1,centrale)),
 		guida(p(poggio_secco,interna)),
 		guida(p(2,interna)),
-		pitstop,
-		completa_giro,
+		effettua_pitstop,
 		guida(p(luco,interna)),
 		guida(p(1,centrale)),
 		guida(p(poggio_secco,interna)),

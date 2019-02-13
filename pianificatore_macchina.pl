@@ -38,12 +38,14 @@ add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1)],[in(p(S0,T0)),usura(Q)],Costo
 	not(avversario(p(S,T))),
 	check_usura_stato(Stato,S,T,Q,Q1),
 	Costo is Q1 - Q.
-add_del(pitstop,Stato,[usura(0),pitstop(N1),in(p(S1,T1))],[usura(Q),pitstop(N),in(p(S0,T0))],Costo) :-
+add_del(effettua_pitstop,Stato,[usura(0),pitstop(N1),in(p(S1,T1)),giro(G1)],[usura(Q),pitstop(N),in(p(S0,T0)),giro(G)],Costo) :-
 	member(in(p(S0,T0)),Stato),
 	sez_succ(p(S0,T0),pit),
 	sez_succ(pit,p(S1,T1)),
 	member(usura(Q),Stato),
+	member(giro(G),Stato),
 	member(pitstop(N),Stato),
+	G1 is G + 1,
 	N1 is N + 1,
 	Costo is Q * 1.
 add_del(completa_giro,Stato,[in(p(S1,T1)),giro(G1)],[in(p(S,T)),giro(G)],1) :-
@@ -63,7 +65,7 @@ add_del(taglia_traguardo,Stato,[in(traguardo)],[in(p(S,T))],1) :-
 
 %=============================================================================== UTILS
 
-pred(check_usura_state(p_node,sezione,traiettoria,number,number)).
+pred(check_usura_stato(p_node,sezione,traiettoria,number,number)).
 % come check_usura di mondo_macchina ma controllo usura come fluente dello stato
 check_usura_stato(Stato,S,T,Q,Q1) :-
 	member(usura(Q),Stato),
@@ -113,16 +115,15 @@ pred(piano(decisione_complessa, list(action), number)).
 
 stato_iniziale(Stato) :-
 	% list_to_ord_set([in(griglia),usura(0),pitstop(0),giro(0)],Stato).
-	list_to_ord_set([in(griglia),usura(0),pitstop(0),giro(0)],Stato).
+	list_to_ord_set([in(griglia),usura(0),giro(0),pitstop(0)],Stato).
 stato_goal(Stato) :-
-	member(in(p(san_donato,centrale)),Stato),
-	member(giro(2),Stato).
-	% member(usura(Q),Stato),
-	% usura_massima(Qmax),
-	% Q =< Qmax,
-	% member(giro(G),Stato),
-	% giri(N),
-	% G =:= N.
+	member(in(traguardo),Stato),
+	member(usura(Q),Stato),
+	usura_massima(Qmax),
+	Q =< Qmax,
+	member(giro(G),Stato),
+	giri(N),
+	G =:= N.
 
 % Uso i predicati stato_iniziale/1 e stato_goal/1 per passare stato iniziale e
 % stato goal al planner
