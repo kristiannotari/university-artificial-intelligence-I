@@ -27,12 +27,14 @@ mostra(spostamento(p(S1,T1),p(S2,T2),Q)) :- !,
 	maplist(write, ['guido da ', S1, '[', T1 , '] a ', S2, '[', T2, '] (usura=', Q, ')']).
 mostra(fermato_ai_pit(G,N,p(S,T))) :- !,
 	step,
-	maplist(write, ['eseguo pitstop (usura pneumatici torna a 0, pitstop effettuati=', N, ')\n\tesco dai pit in ', S, '[', T , '] e inizio il ', G, '° giro']).
+	maplist(write, ['eseguo pitstop (usura pneumatici torna a 0, pitstop effettuati=', N, ')\n\tesco dai pit in ', S, '[', T , '] e inizio il ', G, '° giro']),
+	forall(avversario(p(S1,T1)), (write(',\n\t'), write(avversario(S1,T1)))).
 mostra(giro(G)) :- !,
 	step,
 	giri(N),
 	G0 is G - 1,
-	maplist(write, ['completato il giro ', G0, '/', N]).
+	maplist(write, ['completato il giro ', G0, '/', N]),
+	forall(avversario(p(S,T)), (write(',\n\t'), write(avversario(S,T)))).
 mostra(arrivato) :- !,
 	step,
 	giri(N),

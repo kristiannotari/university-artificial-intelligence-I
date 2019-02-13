@@ -22,8 +22,6 @@ open_pred(pitlane_in(punto)).
 % pitlane_in(P): dal punto P si può accedere ai pit
 open_pred(pitlane_out(punto)).
 % pitlane_out(p(S,T)): uscendo dai pit si passa alla sezione S in traiettoria T
-open_pred(avversario(punto)).
-% avversario(p(S,T)): c'è un avversario nella sezione S in traiettoria T
 open_pred(cambio(traiettoria,traiettoria)).
 % cambio(T1,T2): se è possibile lo spostamento da T1 a T2
 open_pred(calc_usura(sezione,traiettoria,number,number)).
@@ -65,21 +63,25 @@ usura_massima(10).
 %===============================================================================  MONDO, PARTE DINAMICA
 
 pred(in(luogo)).
-%  in(L) : la macchina si trova nel luogo L
-%  MODO  (?) semidet.
+% in(L) : la macchina si trova nel luogo L
+% MODO  (?) semidet.
 :- dynamic(in/1).
 pred(usura(number)).
-%  usura(Q) : Q quantità di usura degli pneumatici
-%  MODO (?) semidet.
+% usura(Q) : Q quantità di usura degli pneumatici
+% MODO (?) semidet.
 :- dynamic(usura/1).
 pred(pitstop(number)).
-%  pitstop(N) : N numero di pitstop effettuati
-%  MODO (?) semidet.p
+% pitstop(N) : N numero di pitstop effettuati
+% MODO (?) semidet.p
 :- dynamic(usura/1).
 pred(giro(number)).
-%  giro(N) : N numero del giro in corso
-%  MODO (?) semidet.
+% giro(N) : N numero del giro in corso
+% MODO (?) semidet.
 :- dynamic(giro/1).
+open_pred(avversario(punto)).
+% avversario(p(S,T)): c'è un avversario nella sezione S in traiettoria T
+% MODO (?) semidet.
+:- dynamic(avversario/1).
 
 %===============================================================================  ESECUZIONE AZIONI NEL MONDO
 
@@ -158,6 +160,7 @@ esecuzione(effettua_pitstop) :-
 	pitstop(N),
 	N1 is N + 1,
 	G1 is G + 1,
+	sposta_avversari,
 	change(
 		[usura(Q),pitstop(N),in(p(S0,T0)),giro(G)],
 		[usura(0),pitstop(N1),in(p(S1,T1)),giro(G1)],
@@ -171,6 +174,7 @@ esecuzione(completa_giro) :-
 	G < N,
 	G1 is G + 1,
 	sez_succ(griglia,p(S1,T1)),
+	sposta_avversari,
 	change(
 		[in(p(S,T)),giro(G)],
 		[in(p(S1,T1)),giro(G1)],
@@ -210,6 +214,28 @@ check_usura(S,T,Q,Q1) :-
 	usura_massima(Qmax),
 	Q1 =< Qmax.
 
+pred(sposta_avversari).
+% sposta_avversari: sposta tutti gli avversari (evitando di farli andare
+%	su dove è adesso la macchina)
+% MODO: (+) semidet.
+sposta_avversari :-
+	not(avversario(p(_,_)))
+	;
+	forall(
+		avversario(p(S0,T0)),
+		(
+			(
+				sez_succ(p(S0,T0),p(S1,T1));
+				sez_succ(p(S0,T0),traguardo),
+				sez_succ(griglia,p(S1,T1))
+			),
+			not(in(p(S1,T1))),
+			not(var(T1)),
+			retract(avversario(p(S0,T0))),
+			assert(avversario(p(S1,T1)))
+		)
+	).
+
 %===============================================================================  TESTING
 	
 test_start(K) :-
@@ -229,43 +255,59 @@ test([]).
 test_case(1, [
 	schierati,
 	guida(p(san_donato,centrale)),
+	guida(p(luco,centrale)),
+	guida(p(1,centrale)),
+	guida(p(poggio_secco,interna)),
+	guida(p(2,interna)),
+	taglia_traguardo
+]).
+test_case(2, [
+	schierati,
+	guida(p(san_donato,centrale)),
+	guida(p(luco,centrale)),
+	guida(p(1,centrale)),
+	guida(p(poggio_secco,interna)),
+	guida(p(2,interna)),
+	effettua_pitstop,
+	guida(p(luco,centrale)),
+	guida(p(1,esterna)),
+	guida(p(poggio_secco,centrale)),
+	guida(p(2,interna)),
+	taglia_traguardo
+]).
+test_case(3, [
+	schierati,
+	guida(p(san_donato,centrale)),
 	guida(p(luco,interna)),
 	guida(p(1,centrale)),
 	guida(p(poggio_secco,interna)),
 	guida(p(2,interna)),
-	pitstop,
+	effettua_pitstop,
+	guida(p(luco,interna)),
+	guida(p(1,centrale)),
+	guida(p(poggio_secco,interna)),
+	guida(p(2,interna)),
+	completa_giro,
+	guida(p(luco,interna)),
+	guida(p(1,centrale)),
+	guida(p(poggio_secco,interna)),
+	guida(p(2,interna)),
 	taglia_traguardo
 ]).
-test_case(2, [
-		schierati,
-		guida(p(san_donato,centrale)),
-		guida(p(luco,interna)),
-		guida(p(1,centrale)),
-		guida(p(poggio_secco,interna)),
-		guida(p(2,interna)),
-		effettua_pitstop,
-		guida(p(luco,interna)),
-		guida(p(1,centrale)),
-		guida(p(poggio_secco,interna)),
-		guida(p(2,interna)),
-		taglia_traguardo
-	]).
-test_case(3, [
-		schierati,
-		guida(p(san_donato,centrale)),
-		guida(p(luco,interna)),
-		guida(p(1,centrale)),
-		guida(p(poggio_secco,interna)),
-		guida(p(2,interna)),
-		effettua_pitstop,
-		guida(p(luco,interna)),
-		guida(p(1,centrale)),
-		guida(p(poggio_secco,interna)),
-		guida(p(2,interna)),
-		completa_giro,
-		guida(p(luco,interna)),
-		guida(p(1,centrale)),
-		guida(p(poggio_secco,interna)),
-		guida(p(2,interna)),
-		taglia_traguardo
-	]).
+% test di roba pianificata
+test_case(4, [
+	schierati,
+	guida(p(san_donato, interna)),
+	guida(p(luco, centrale)),
+	guida(p(1, centrale)),
+	guida(p(poggio_secco, interna)),
+	guida(p(2, interna)),
+	effettua_pitstop,
+	guida(p(luco, centrale)),
+	guida(p(1, centrale)),
+	guida(p(poggio_secco, interna)),
+	guida(p(2, centrale)),
+	taglia_traguardo
+]).
+		  
+		  

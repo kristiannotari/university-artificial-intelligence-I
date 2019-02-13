@@ -29,16 +29,16 @@ local_pred(h(p_node,number)).
 add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1),giro(1)],[in(griglia),usura(Q),giro(0)],Costo) :-
 	member(in(griglia),Stato),
 	sez_succ(griglia,p(S,T)),
-	not(avversario(p(S,T))),
 	check_usura_stato(Stato,S,T,Q,Q1),
+	not(member(avversario(p(S,T)),Stato)),
 	Costo is Q1 - Q.
 add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1)],[in(p(S0,T0)),usura(Q)],Costo) :-
 	member(in(p(S0,T0)),Stato),
 	sez_succ(p(S0,T0),p(S,T)),
-	not(avversario(p(S,T))),
 	check_usura_stato(Stato,S,T,Q,Q1),
+	not(member(avversario(p(S,T)),Stato)),
 	Costo is Q1 - Q.
-add_del(effettua_pitstop,Stato,[usura(0),pitstop(N1),in(p(S1,T1)),giro(G1)],[usura(Q),pitstop(N),in(p(S0,T0)),giro(G)],Costo) :-
+add_del(effettua_pitstop,Stato,Add,Del,Costo) :-
 	member(in(p(S0,T0)),Stato),
 	sez_succ(p(S0,T0),pit),
 	sez_succ(pit,p(S1,T1)),
@@ -47,15 +47,22 @@ add_del(effettua_pitstop,Stato,[usura(0),pitstop(N1),in(p(S1,T1)),giro(G1)],[usu
 	member(pitstop(N),Stato),
 	G1 is G + 1,
 	N1 is N + 1,
-	Costo is Q * 1.
-add_del(completa_giro,Stato,[in(p(S1,T1)),giro(G1)],[in(p(S,T)),giro(G)],1) :-
+	Costo is Q * 1,
+	sposta_avversari_stato(Stato,A,D),
+	append([usura(0),pitstop(N1),in(p(S1,T1)),giro(G1)],A,Add),
+	append([usura(Q),pitstop(N),in(p(S0,T0)),giro(G)],D,Del).
+add_del(completa_giro,Stato,Add,Del,1) :-
 	member(in(p(S,T)),Stato),
 	sez_succ(p(S,T),traguardo),
 	member(giro(G),Stato),
 	giri(N),
 	G < N,
 	G1 is G+1,
-	sez_succ(griglia,p(S1,T1)).
+	sez_succ(griglia,p(S1,T1)),
+	not(member(avversario(p(S1,T1)),Stato)),
+	sposta_avversari_stato(Stato,A,D),
+	append([in(p(S1,T1)),giro(G1)],A,Add),
+	append([in(p(S,T)),giro(G)],D,Del).
 add_del(taglia_traguardo,Stato,[in(traguardo)],[in(p(S,T))],1) :-
 	member(in(p(S,T)),Stato),
 	sez_succ(p(S,T),traguardo),
@@ -72,6 +79,31 @@ check_usura_stato(Stato,S,T,Q,Q1) :-
 	calc_usura(S,T,Q,Q1),
 	usura_massima(Qmax),
 	Q1 =< Qmax.
+pred(sposta_avversari_stato(p_node,list,list)).
+% sposta_avversari(Stato,A,D): sposta tutti gli avversari (evitando di farli
+% 	andare su dove è adesso la macchina) e dà in output la lista degli avversari
+%	con le nuove posizioni (A) e vecchie (D)
+% MODO: (+,-,-) semidet.
+sposta_avversari_stato(Stato,A,D) :-
+	not(member(avversario(p(_,_)),Stato)) ->
+	A = [],
+	D = []
+	;
+	setof(avversario(p(S,T)),member(avversario(p(S,T)),Stato),D),
+	setof(
+		avversario(p(S1,T1)),
+		(
+			member(avversario(p(S0,T0)),Stato),
+			(
+				sez_succ(p(S0,T0),p(S1,T1));
+				sez_succ(p(S0,T0),traguardo),
+				sez_succ(griglia,p(S1,T1))
+			),
+			not(member(in(p(S1,T1)),Stato)),
+			not(var(T1))
+		),
+		A
+	).
 
 %=============================================================================== EURISTICHE
 % i commenti avete l'euristica 0, quella di base sottostimata
@@ -114,8 +146,9 @@ pred(piano(decisione_complessa, list(action), number)).
 % MODO (++,--,--) nondet
 
 stato_iniziale(Stato) :-
+	setof(avversario(p(S,T)),avversario(p(S,T)),ListaAvversari),
 	% list_to_ord_set([in(griglia),usura(0),pitstop(0),giro(0)],Stato).
-	list_to_ord_set([in(griglia),usura(0),giro(0),pitstop(0)],Stato).
+	list_to_ord_set([in(griglia),usura(0),giro(0),pitstop(0)|ListaAvversari],Stato).
 stato_goal(Stato) :-
 	member(in(traguardo),Stato),
 	member(usura(Q),Stato),

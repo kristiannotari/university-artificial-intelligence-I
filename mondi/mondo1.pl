@@ -23,7 +23,7 @@ tracciato([
 	1,
 	poggio_secco,
 	2
-	]).
+]).
 
 curva(san_donato).
 curva(luco).
@@ -35,7 +35,7 @@ rettilineo(2).
 pitlane_in(p(2,interna)).
 pitlane_out(p(san_donato,interna)).
 
-avversario(p(luco,interna)).
+avversario(p(asda,asda)).
 
 %=============================================================================== REGOLE DI GARA
 
