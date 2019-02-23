@@ -13,6 +13,7 @@ type([interna,centrale,esterna]:traiettoria).
 %	- curve
 %	- rettilinei
 %	- pitlane in e out
+%	- traiettorie
 %	- avversari
 
 giri(2).
@@ -35,7 +36,11 @@ rettilineo(2).
 pitlane_in(p(2,interna)).
 pitlane_out(p(san_donato,interna)).
 
-avversario(p(asda,asda)).
+traiettoria(esterna).
+traiettoria(centrale).
+traiettoria(interna).
+
+avversario(p(san_donato,esterna)).
 
 %=============================================================================== REGOLE DI GARA
 

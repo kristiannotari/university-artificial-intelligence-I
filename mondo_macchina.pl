@@ -22,6 +22,8 @@ open_pred(pitlane_in(punto)).
 % pitlane_in(P): dal punto P si può accedere ai pit
 open_pred(pitlane_out(punto)).
 % pitlane_out(p(S,T)): uscendo dai pit si passa alla sezione S in traiettoria T
+open_pred(traiettoria(traiettoria)).
+% traiettoria(T): T è una traiettoria
 open_pred(cambio(traiettoria,traiettoria)).
 % cambio(T1,T2): se è possibile lo spostamento da T1 a T2
 open_pred(calc_usura(sezione,traiettoria,number,number)).
@@ -46,10 +48,14 @@ sez_succ(pit,p(S,T)) :-
 sez_succ(p(S1,T1),p(S2,T2)) :-
 	tracciato(SS),
 	append(_, [S1|[S2|_]], SS),
+	traiettoria(T1),
+	traiettoria(T2),
 	cambio(T1,T2).
-sez_succ(griglia,p(S,_)) :-
+sez_succ(griglia,p(S,T)) :-
+	traiettoria(T),
 	tracciato([S|_]).
-sez_succ(p(S,_),traguardo) :-
+sez_succ(p(S,T),traguardo) :-
+	traiettoria(T),
 	tracciato(SS),
 	append(_,[S],SS).
 
@@ -230,7 +236,6 @@ sposta_avversari :-
 				sez_succ(griglia,p(S1,T1))
 			),
 			not(in(p(S1,T1))),
-			not(var(T1)),
 			retract(avversario(p(S0,T0))),
 			assert(avversario(p(S1,T1)))
 		)

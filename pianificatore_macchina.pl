@@ -86,24 +86,39 @@ pred(sposta_avversari_stato(p_node,list,list)).
 % MODO: (+,-,-) semidet.
 sposta_avversari_stato(Stato,A,D) :-
 	not(member(avversario(p(_,_)),Stato)) ->
-	A = [],
-	D = []
+		A = [],
+		D = []
 	;
-	setof(avversario(p(S,T)),member(avversario(p(S,T)),Stato),D),
-	setof(
-		avversario(p(S1,T1)),
-		(
-			member(avversario(p(S0,T0)),Stato),
+		setof(avversario(p(S,T)),member(avversario(p(S,T)),Stato),D),
+		forall(
+			)
+		setof(
+			p(S1,T1), 
 			(
-				sez_succ(p(S0,T0),p(S1,T1));
-				sez_succ(p(S0,T0),traguardo),
-				sez_succ(griglia,p(S1,T1))
+				member(avversario(p(S,T)),D),
+				(
+						sez_succ(p(S0,T0),p(S1,T1));
+						sez_succ(p(S0,T0),traguardo),
+						sez_succ(griglia,p(S1,T1))
+				),
+				not(member(in(p(S1,T1)),Stato))
+			)
+		)
+		setof(
+			avversario(p(S1,T1)),
+			(
+				member(avversario(p(S0,T0)),D),
+				(
+					sez_succ(p(S0,T0),p(S1,T1));
+					sez_succ(p(S0,T0),traguardo),
+					sez_succ(griglia,p(S1,T1))
+				),
+				not(member(in(p(S1,T1)),Stato))
 			),
-			not(member(in(p(S1,T1)),Stato)),
-			not(var(T1))
+			A
 		),
-		A
-	).
+		maplist(write, ['\n\n\tavversari D: ', D, '\n\tavversari A: ', A]).
+
 
 %=============================================================================== EURISTICHE
 % i commenti avete l'euristica 0, quella di base sottostimata
@@ -146,8 +161,11 @@ pred(piano(decisione_complessa, list(action), number)).
 % MODO (++,--,--) nondet
 
 stato_iniziale(Stato) :-
-	setof(avversario(p(S,T)),avversario(p(S,T)),ListaAvversari),
-	% list_to_ord_set([in(griglia),usura(0),pitstop(0),giro(0)],Stato).
+	(
+		not(avversario(p(_,_))) ->
+		ListaAvversari = [];
+		setof(avversario(p(S,T)),avversario(p(S,T)),ListaAvversari)
+	),
 	list_to_ord_set([in(griglia),usura(0),giro(0),pitstop(0)|ListaAvversari],Stato).
 stato_goal(Stato) :-
 	member(in(traguardo),Stato),
@@ -156,17 +174,20 @@ stato_goal(Stato) :-
 	Q =< Qmax,
 	member(giro(G),Stato),
 	giri(N),
-	G =:= N.
+	G =:= N,
+
+	setof(avversario(p(S,T)),member(avversario(p(S,T)),Stato),D),
+	maplist(write, ['\n\nAVVERSARI: ', D]).
 
 % Uso i predicati stato_iniziale/1 e stato_goal/1 per passare stato iniziale e
 % stato goal al planner
-piano(gareggia, Plan, Cost) :-
+piano(gareggia,Plan,Cost) :-
 	plan(stato_iniziale,
 	     stato_goal,
 			     [_Sin|_Path],
 			     _Goal,
 			     Cost,
-			     Plan).
+				 Plan).
 
 %===============================================================================   TEST EURISTICHE
 
