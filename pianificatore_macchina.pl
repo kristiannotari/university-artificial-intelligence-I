@@ -26,12 +26,12 @@ local_pred(h(p_node,number)).
 % pred(add_del(action, p_node, list(fluent), list(fluent), number)).
 % IMPLEMENTA strips:add_del
 
-add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1),giro(1)],[in(griglia),usura(Q),giro(0)],Costo) :-
+add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1),giro(1)],[in(griglia),usura(0),giro(0)],Costo) :-
 	member(in(griglia),Stato),
 	sez_succ(griglia,p(S,T)),
-	check_usura_stato(Stato,S,T,Q,Q1),
+	check_usura_stato(Stato,S,T,0,Q1),
 	not(member(avversario(p(S,T)),Stato)),
-	Costo is Q1 - Q.
+	Costo is Q1.
 add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1)],[in(p(S0,T0)),usura(Q)],Costo) :-
 	member(in(p(S0,T0)),Stato),
 	sez_succ(p(S0,T0),p(S,T)),
@@ -51,7 +51,7 @@ add_del(effettua_pitstop,Stato,Add,Del,Costo) :-
 	sposta_avversari_stato(Stato,A,D),
 	append([usura(0),pitstop(N1),in(p(S1,T1)),giro(G1)],A,Add),
 	append([usura(Q),pitstop(N),in(p(S0,T0)),giro(G)],D,Del).
-add_del(completa_giro,Stato,Add,Del,1) :-
+add_del(completa_giro,Stato,Add,Del,Costo) :-
 	member(in(p(S,T)),Stato),
 	sez_succ(p(S,T),traguardo),
 	member(giro(G),Stato),
@@ -60,10 +60,12 @@ add_del(completa_giro,Stato,Add,Del,1) :-
 	G1 is G+1,
 	sez_succ(griglia,p(S1,T1)),
 	not(member(avversario(p(S1,T1)),Stato)),
+	check_usura_stato(Stato,S1,T1,Q,Q1),
 	sposta_avversari_stato(Stato,A,D),
-	append([in(p(S1,T1)),giro(G1)],A,Add),
-	append([in(p(S,T)),giro(G)],D,Del).
-add_del(taglia_traguardo,Stato,[in(traguardo)],[in(p(S,T))],1) :-
+	append([in(p(S1,T1)),giro(G1),usura(Q1)],A,Add),
+	append([in(p(S,T)),giro(G),usura(Q)],D,Del),
+	Costo is Q1 - Q.
+add_del(taglia_traguardo,Stato,[in(traguardo)],[in(p(S,T))],0) :-
 	member(in(p(S,T)),Stato),
 	sez_succ(p(S,T),traguardo),
 	member(giro(G),Stato),
@@ -90,20 +92,6 @@ sposta_avversari_stato(Stato,A,D) :-
 		D = []
 	;
 		setof(avversario(p(S,T)),member(avversario(p(S,T)),Stato),D),
-		forall(
-			)
-		setof(
-			p(S1,T1), 
-			(
-				member(avversario(p(S,T)),D),
-				(
-						sez_succ(p(S0,T0),p(S1,T1));
-						sez_succ(p(S0,T0),traguardo),
-						sez_succ(griglia,p(S1,T1))
-				),
-				not(member(in(p(S1,T1)),Stato))
-			)
-		)
 		setof(
 			avversario(p(S1,T1)),
 			(
@@ -112,12 +100,11 @@ sposta_avversari_stato(Stato,A,D) :-
 					sez_succ(p(S0,T0),p(S1,T1));
 					sez_succ(p(S0,T0),traguardo),
 					sez_succ(griglia,p(S1,T1))
-				),
+				), !,
 				not(member(in(p(S1,T1)),Stato))
 			),
 			A
-		),
-		maplist(write, ['\n\n\tavversari D: ', D, '\n\tavversari A: ', A]).
+		).
 
 
 %=============================================================================== EURISTICHE
@@ -177,7 +164,8 @@ stato_goal(Stato) :-
 	G =:= N,
 
 	setof(avversario(p(S,T)),member(avversario(p(S,T)),Stato),D),
-	maplist(write, ['\n\nAVVERSARI: ', D]).
+	maplist(write, ['\n\nAVVERSARI: ', D]),
+	maplist(write, ['\nUSURA: ', Q, '/', Qmax, '\n\n']).
 
 % Uso i predicati stato_iniziale/1 e stato_goal/1 per passare stato iniziale e
 % stato goal al planner

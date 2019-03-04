@@ -1,7 +1,7 @@
 :- multifile([type/1, pred/1, local_pred/1, open_pred/1, skipped/1, user_unit/1]).
 
 user_unit(mondo1).
-%  Un mondo con il tracciato del mugello
+% Un mondo con il tracciato del Mugello
 
 type([san_donato,luco,poggio_secco,1,2]:sezione).
 type([interna,centrale,esterna]:traiettoria).
@@ -15,6 +15,7 @@ type([interna,centrale,esterna]:traiettoria).
 %	- pitlane in e out
 %	- traiettorie
 %	- avversari
+% "Minima" usura massima = 5 per 1 giro
 
 giri(2).
 

@@ -10,7 +10,7 @@
  '   Macchina con conoscenza completa; macchina_help',
  '*****************************************************']).
 
-aspirapolvere_help :- maplist(writeln,
+macchina_help :- maplist(writeln,
 ['HELP',
  '?- start. per avviare la macchina',
  ' Traccia di debug attiva per default,',

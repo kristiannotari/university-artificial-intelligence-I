@@ -62,7 +62,7 @@ sez_succ(p(S,T),traguardo) :-
 pred(usura_massima(number)).
 % usura_massima(Q): Q quantità massima di usura degli pneumatici della macchina
 % MODO (?) semidet.
-usura_massima(10).
+usura_massima(5).
 
 :- consult(mondi/mondo1).
 
