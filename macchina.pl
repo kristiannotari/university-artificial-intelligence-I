@@ -100,9 +100,7 @@ do_action(Azione,S1,S2) :-
 transizione(schierati,ferma,in_gara).
 transizione(taglia_traguardo,in_gara,ferma).
 transizione(guida(_),in_gara,in_gara).
-transizione(pitin,in_gara,in_gara).
-transizione(pitstop,in_gara,in_gara).
-transizione(pitout,in_gara,in_gara).
+transizione(effettua_pitstop,in_gara,in_gara).
 transizione(completa_giro,in_gara,in_gara).
 
 

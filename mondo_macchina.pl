@@ -303,16 +303,14 @@ test_case(3, [
 test_case(4, [
 	schierati,
 	guida(p(san_donato, interna)),
-	guida(p(luco, centrale)),
+	guida(p(luco, interna)),
 	guida(p(1, centrale)),
 	guida(p(poggio_secco, interna)),
 	guida(p(2, interna)),
 	effettua_pitstop,
-	guida(p(luco, centrale)),
-	guida(p(1, centrale)),
+	guida(p(luco, interna)),
+	guida(p(1, interna)),
 	guida(p(poggio_secco, interna)),
 	guida(p(2, centrale)),
 	taglia_traguardo
-]).
-		  
-		  
+]).	  
