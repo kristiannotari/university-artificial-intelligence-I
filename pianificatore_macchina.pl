@@ -30,13 +30,13 @@ add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1),giro(1)],[in(griglia),usura(0)
 	member(in(griglia),Stato),
 	sez_succ(griglia,p(S,T)),
 	check_usura_stato(Stato,S,T,0,Q1),
-	not(member(avversario(p(S,T)),Stato)),
+	not(member(avversario(_,p(S,T)),Stato)),
 	Costo is Q1.
 add_del(guida(p(S,T)),Stato,[in(p(S,T)),usura(Q1)],[in(p(S0,T0)),usura(Q)],Costo) :-
 	member(in(p(S0,T0)),Stato),
 	sez_succ(p(S0,T0),p(S,T)),
 	check_usura_stato(Stato,S,T,Q,Q1),
-	not(member(avversario(p(S,T)),Stato)),
+	not(member(avversario(_,p(S,T)),Stato)),
 	Costo is Q1 - Q.
 add_del(effettua_pitstop,Stato,Add,Del,Costo) :-
 	member(in(p(S0,T0)),Stato),
@@ -59,7 +59,7 @@ add_del(completa_giro,Stato,Add,Del,Costo) :-
 	G < N,
 	G1 is G+1,
 	sez_succ(griglia,p(S1,T1)),
-	not(member(avversario(p(S1,T1)),Stato)),
+	not(member(avversario(_,p(S1,T1)),Stato)),
 	check_usura_stato(Stato,S1,T1,Q,Q1),
 	sposta_avversari_stato(Stato,A,D),
 	append([in(p(S1,T1)),giro(G1),usura(Q1)],A,Add),
@@ -87,15 +87,15 @@ pred(sposta_avversari_stato(p_node,list,list)).
 %	con le nuove posizioni (A) e vecchie (D)
 % MODO: (+,-,-) semidet.
 sposta_avversari_stato(Stato,A,D) :-
-	not(member(avversario(p(_,_)),Stato)) ->
+	not(member(avversario(_,p(_,_)),Stato)) ->
 		A = [],
 		D = []
 	;
-		setof(avversario(p(S,T)),member(avversario(p(S,T)),Stato),D),
+		setof(avversario(Nome,p(S,T)),member(avversario(Nome,p(S,T)),Stato),D),
 		setof(
-			avversario(p(S1,T1)),
+			avversario(Nome,p(S1,T1)),
 			(
-				member(avversario(p(S0,T0)),D),
+				member(avversario(Nome,p(S0,T0)),D),
 				(
 					sez_succ(p(S0,T0),p(S1,T1));
 					sez_succ(p(S0,T0),traguardo),
@@ -149,9 +149,9 @@ pred(piano(decisione_complessa, list(action), number)).
 
 stato_iniziale(Stato) :-
 	(
-		not(avversario(p(_,_))) ->
+		not(avversario(_,p(_,_))) ->
 		ListaAvversari = [];
-		setof(avversario(p(S,T)),avversario(p(S,T)),ListaAvversari)
+		setof(avversario(Nome,p(S,T)),avversario(Nome,p(S,T)),ListaAvversari)
 	),
 	list_to_ord_set([in(griglia),usura(0),giro(0),pitstop(0)|ListaAvversari],Stato).
 stato_goal(Stato) :-
@@ -163,7 +163,7 @@ stato_goal(Stato) :-
 	giri(N),
 	G =:= N,
 
-	setof(avversario(p(S,T)),member(avversario(p(S,T)),Stato),D),
+	setof(avversario(Nome,p(S,T)),member(avversario(Nome,p(S,T)),Stato),D),
 	maplist(write, ['\n\nAVVERSARI: ', D]),
 	maplist(write, ['\nUSURA: ', Q, '/', Qmax, '\n\n']).
 

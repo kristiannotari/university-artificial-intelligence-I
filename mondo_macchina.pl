@@ -62,9 +62,7 @@ sez_succ(p(S,T),traguardo) :-
 pred(usura_massima(number)).
 % usura_massima(Q): Q quantità massima di usura degli pneumatici della macchina
 % MODO (?) semidet.
-usura_massima(5).
-
-:- consult(mondi/mondo1).
+usura_massima(10).
 
 %===============================================================================  MONDO, PARTE DINAMICA
 
@@ -78,21 +76,21 @@ pred(usura(number)).
 :- dynamic(usura/1).
 pred(pitstop(number)).
 % pitstop(N) : N numero di pitstop effettuati
-% MODO (?) semidet.p
+% MODO (?) semidet.
 :- dynamic(usura/1).
 pred(giro(number)).
 % giro(N) : N numero del giro in corso
 % MODO (?) semidet.
 :- dynamic(giro/1).
-open_pred(avversario(punto)).
-% avversario(p(S,T)): c'è un avversario nella sezione S in traiettoria T
+open_pred(avversario(atom,punto)).
+% avversario(N, p(S,T)): c'è un avversario (N) nella sezione S in traiettoria T
 % MODO (?) semidet.
-:- dynamic(avversario/1).
+:- dynamic(avversario/2).
 
 %===============================================================================  ESECUZIONE AZIONI NEL MONDO
 
 type([schierati, guida(punto), effettua_pitstop, completa_giro, taglia_traguardo]:action).
-%  le azioni
+% le azioni
 type([schierato, partito(punto,number), spostamento(punto,punto,number), fermato_ai_pit(number,number,punto), giro, arrivato]:cambiamento).
 % schierato:
 %	la macchina viene schierata in griglia pronta a partire
@@ -128,7 +126,10 @@ clear_db :-
 	retractall(usura(_)),
 	retractall(pitstop(_)),
 	retractall(giro(_)),
-	nb_setval(step,0).
+	retractall(avversario(_,_)),
+	nb_setval(step,0),
+	consult(mondi/mondo1). % --------------------------------------------------- caricamento del mondo scelto
+:- clear_db.
 
 esecuzione(schierati) :-
 	clear_db,
@@ -139,8 +140,7 @@ esecuzione(schierati) :-
 	).
 esecuzione(guida(p(S,T))) :-
 	in(L),
-	sez_succ(L,p(S,T)),
-	not(avversario(p(S,T))),
+	check_guidabilita(L,p(S,T)),
 	check_usura(S,T,Q,Q1),
 	(
 		R0 = [in(L),usura(Q)],
@@ -160,7 +160,7 @@ esecuzione(guida(p(S,T))) :-
 esecuzione(effettua_pitstop) :-
 	in(p(S0,T0)),
 	sez_succ(p(S0,T0),pit),
-	sez_succ(pit,p(S1,T1)),
+	check_guidabilita(pit,p(S1,T1)),
 	usura(Q),
 	giro(G),
 	pitstop(N),
@@ -179,7 +179,7 @@ esecuzione(completa_giro) :-
 	giri(N),
 	G < N,
 	G1 is G + 1,
-	sez_succ(griglia,p(S1,T1)),
+	check_guidabilita(griglia,p(S1,T1)),
 	sposta_avversari,
 	change(
 		[in(p(S,T)),giro(G)],
@@ -220,24 +220,39 @@ check_usura(S,T,Q,Q1) :-
 	usura_massima(Qmax),
 	Q1 =< Qmax.
 
+pred(check_guidabilita(luogo,luogo)).
+% check_guidabilita(L0,L1): verifica che la macchina possa muoversi nella
+% 	sezione successiva a quella in input L0 (anche con controllo avversari)
+% MODO: (+,?) semidet.
+check_guidabilita(L1) :-
+	in(L0),
+	check_guidabilita(L0,L1).
+check_guidabilita(L0,L1) :-
+	sez_succ(L0,L1),
+	not(avversario(_,L1)).
+
 pred(sposta_avversari).
 % sposta_avversari: sposta tutti gli avversari (evitando di farli andare
-%	su dove è adesso la macchina)
+%	su dove è adesso la macchina o un altro avversario)
 % MODO: (+) semidet.
 sposta_avversari :-
-	not(avversario(p(_,_)))
+	not(avversario(_,p(_,_)))
 	;
 	forall(
-		avversario(p(S0,T0)),
+		avversario(Nome,p(S0,T0)),
 		(
 			(
-				sez_succ(p(S0,T0),p(S1,T1));
+				sez_succ(p(S0,T0),p(S1,T1))
+				;
 				sez_succ(p(S0,T0),traguardo),
-				sez_succ(griglia,p(S1,T1))
+				sez_succ(p(S0,T0),p(S1,T1))
 			),
-			not(in(p(S1,T1))),
-			retract(avversario(p(S0,T0))),
-			assert(avversario(p(S1,T1)))
+			(				
+				not(in(p(S1,T1))),
+				not(avversario(_,p(S1,T1)))
+		 	),
+			retract(avversario(Nome,p(S0,T0))),
+			assert(avversario(Nome,p(S1,T1)))
 		)
 	).
 
