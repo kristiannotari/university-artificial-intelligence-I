@@ -62,7 +62,7 @@ sez_succ(p(S,T),traguardo) :-
 pred(usura_massima(number)).
 % usura_massima(Q): Q quantità massima di usura degli pneumatici della macchina
 % MODO (?) semidet.
-usura_massima(10).
+usura_massima(30).
 
 %===============================================================================  MONDO, PARTE DINAMICA
 
@@ -89,7 +89,7 @@ open_pred(avversario(atom,punto)).
 
 %===============================================================================  ESECUZIONE AZIONI NEL MONDO
 
-type([schierati, guida(punto), effettua_pitstop, completa_giro, taglia_traguardo]:action).
+type([schierati, guida(punto), effettua_pitstop, taglia_traguardo]:action).
 % le azioni
 type([schierato, partito(punto,number), spostamento(punto,punto,number), fermato_ai_pit(number,number,punto), giro, arrivato]:cambiamento).
 % schierato:
@@ -140,20 +140,38 @@ esecuzione(schierati) :-
 	).
 esecuzione(guida(p(S,T))) :-
 	in(L),
-	check_guidabilita(L,p(S,T)),
+	(
+		sez_succ(L,traguardo),
+		From = griglia
+		;
+		From = L
+	),
+	check_guidabilita(From,p(S,T)),
 	check_usura(S,T,Q,Q1),
 	(
 		R0 = [in(L),usura(Q)],
 		A0 = [in(p(S,T)),usura(Q1)],
 		(
-			L = griglia ->  
-			R = [giro(0)|R0],
-			A = [giro(1)|A0],
-			C = partito(p(S,T),Q1)
+			From = griglia ->  
+			(
+				giro(G),
+				G1 is G + 1,
+				R = [giro(G)|R0],
+				A = [giro(G1)|A0],
+				(
+					G = 0 ->
+					C = partito(p(S,T),Q1)
+					;
+					sposta_avversari,
+					C = giro(G1)
+				)
+			)
 			;
-			R = R0,
-			A = A0,
-			C = spostamento(L,p(S,T),Q1)
+			(
+				R = R0,
+				A = A0,
+				C = spostamento(L,p(S,T),Q1)
+			)
 		),
 		change(R,A,C)
 	).
@@ -171,20 +189,6 @@ esecuzione(effettua_pitstop) :-
 		[usura(Q),pitstop(N),in(p(S0,T0)),giro(G)],
 		[usura(0),pitstop(N1),in(p(S1,T1)),giro(G1)],
 		fermato_ai_pit(G1,N1,p(S1,T1))
-	).
-esecuzione(completa_giro) :-
-	in(p(S,T)),
-	sez_succ(p(S,T),traguardo),
-	giro(G),
-	giri(N),
-	G < N,
-	G1 is G + 1,
-	check_guidabilita(griglia,p(S1,T1)),
-	sposta_avversari,
-	change(
-		[in(p(S,T)),giro(G)],
-		[in(p(S1,T1)),giro(G1)],
-		giro(G1)
 	).
 esecuzione(taglia_traguardo) :-
 	in(p(S,T)),
@@ -224,12 +228,14 @@ pred(check_guidabilita(luogo,luogo)).
 % check_guidabilita(L0,L1): verifica che la macchina possa muoversi nella
 % 	sezione successiva a quella in input L0 (anche con controllo avversari)
 % MODO: (+,?) semidet.
-check_guidabilita(L1) :-
-	in(L0),
-	check_guidabilita(L0,L1).
 check_guidabilita(L0,L1) :-
 	sez_succ(L0,L1),
-	not(avversario(_,L1)).
+	(
+		not(avversario(_,L1)), !
+		;
+		avversario(_,L1),
+		throw(punto_occupato_macchina(L0,L1)) %--------------------------------- throw punto occupato macchina
+	).
 
 pred(sposta_avversari).
 % sposta_avversari: sposta tutti gli avversari (evitando di farli andare
@@ -241,18 +247,31 @@ sposta_avversari :-
 	forall(
 		avversario(Nome,p(S0,T0)),
 		(
-			(
-				sez_succ(p(S0,T0),p(S1,T1))
-				;
-				sez_succ(p(S0,T0),traguardo),
-				sez_succ(p(S0,T0),p(S1,T1))
+			findall(
+				p(S1,T1),
+				(
+					(
+						sez_succ(p(S0,T0),p(S1,T1))
+						;
+						sez_succ(p(S0,T0),traguardo),
+						sez_succ(p(S0,T0),p(S1,T1))
+					),
+					(				
+						not(in(p(S1,T1))),
+						not(avversario(_,p(S1,T1)))
+					)
+				),
+				Soluzioni
 			),
-			(				
-				not(in(p(S1,T1))),
-				not(avversario(_,p(S1,T1)))
-		 	),
+			length(Soluzioni,N),
+			(
+				N > 0
+				;
+				throw(punto_occupato_avversario(Nome)) %------------------------ throw punto occupato avversario				
+			),
+			member(P,Soluzioni),
 			retract(avversario(Nome,p(S0,T0))),
-			assert(avversario(Nome,p(S1,T1)))
+			assert(avversario(Nome,P))
 		)
 	).
 
@@ -307,7 +326,7 @@ test_case(3, [
 	guida(p(1,centrale)),
 	guida(p(poggio_secco,interna)),
 	guida(p(2,interna)),
-	completa_giro,
+	guida(p(san_donato,interna)),
 	guida(p(luco,interna)),
 	guida(p(1,centrale)),
 	guida(p(poggio_secco,interna)),
@@ -319,13 +338,13 @@ test_case(4, [
 	schierati,
 	guida(p(san_donato, interna)),
 	guida(p(luco, interna)),
-	guida(p(1, centrale)),
-	guida(p(poggio_secco, interna)),
-	guida(p(2, interna)),
-	effettua_pitstop,
-	guida(p(luco, interna)),
 	guida(p(1, interna)),
 	guida(p(poggio_secco, interna)),
 	guida(p(2, centrale)),
+	guida(p(san_donato,centrale)),
+	guida(p(luco, interna)),
+	guida(p(1, interna)),
+	guida(p(poggio_secco, interna)),
+	guida(p(2, interna)),
 	taglia_traguardo
 ]).	  

@@ -101,8 +101,6 @@ transizione(schierati,ferma,in_gara).
 transizione(taglia_traguardo,in_gara,ferma).
 transizione(guida(_),in_gara,in_gara).
 transizione(effettua_pitstop,in_gara,in_gara).
-transizione(completa_giro,in_gara,in_gara).
-
 
 
 

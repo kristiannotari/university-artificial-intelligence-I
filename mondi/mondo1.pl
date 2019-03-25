@@ -42,6 +42,7 @@ traiettoria(centrale).
 traiettoria(interna).
 
 avversario(hamilton, p(san_donato,esterna)).
+avversario(vettel, p(luco,esterna)).
 
 %=============================================================================== REGOLE DI GARA
 
