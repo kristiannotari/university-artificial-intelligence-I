@@ -97,7 +97,6 @@ sposta_avversari_stato(Stato,A,D) :-
 		maplist(sposta_random(Stato),D,A).
 
 sposta_random(Stato,avversario(Nome,p(S0,T0)),avversario(Nome,P)) :-
-	write("\n\nSPOSTANDO: "), writeln(Nome),
 	findall(
 		p(S1,T1),
 		(
@@ -114,17 +113,15 @@ sposta_random(Stato,avversario(Nome,p(S0,T0)),avversario(Nome,P)) :-
 		),
 		Soluzioni	
 	),
-	write("\tsoluzioni"), writeln(Soluzioni),
 	length(Soluzioni,N),
 	N > 0,
 	random(0,N,I),
 	Index is min(N-1,I),
-	write("\tIndex: "), write(Index), write("/"), writeln(N),
 	(
-		nth0(Index,Soluzioni,P), !; writeln("\tfallita")
-	),
-	write("\tscelta: "),
-	writeln(P).
+		nth0(Index,Soluzioni,P) %----------------------------------------------- scelta random punto avversario
+		;
+		member(P,Soluzioni)
+	).
 
 %=============================================================================== EURISTICHE
 % i commenti avete l'euristica 0, quella di base sottostimata
