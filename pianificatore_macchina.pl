@@ -120,8 +120,9 @@ sposta_random(Stato,avversario(Nome,p(S0,T0)),avversario(Nome,P)) :-
 	(
 		nth0(Index,Soluzioni,P) %----------------------------------------------- scelta random punto avversario
 		;
-		member(P,Soluzioni)
+		true
 	).
+		
 
 %=============================================================================== EURISTICHE
 % i commenti avete l'euristica 0, quella di base sottostimata
