@@ -42,7 +42,7 @@ start :- decisore(ferma).
 
 type([ferma,in_gara,incidentata]:state).
 % Chiudo il tipo state; la macchina attende di essere fatta partire in stato
-% ferma ed procede a nel circuito nello stato in_gara.
+% ferma e procede nel circuito nello stato in_gara.
 % Quando ha finito il giro, ritorna in ferma.
 % Se non può spostarsi in un punto successivo, causa un'incidente.
 type([gareggia]:decisione_complessa).
@@ -54,19 +54,20 @@ local_pred(event(event)).
 % event(E): è avvenuto E
 % MODO: predicato che resta in attesa di eventi implementato con readln
 
-
 pred(decidi(state,decisione)).
-%   decidi(S,D) :   prendi la decisione D nello stato S corrente
-%   MODO(++,--)   det     (nondet in caso di un agente �erratico�)
+% decidi(S,D):   prendi la decisione D nello stato S corrente
+% MODO(++,--) det     (nondet in caso di un agente �erratico�)
 pred(do_action(action,state,state)).
-%  do_action(A,S1,S2)  :  esegui A nello stato S1 con transizione a S2.
-%  MODO(++,++,--) det   (nondet con azioni con effetto non deterministico)
+% do_action(A,S1,S2):  esegui A nello stato S1 con transizione a S2.
+% MODO(++,++,--) det   (nondet con azioni con effetto non deterministico)
 pred(pianifica(decisione,list(action), number)).
-%  pianifica(Dec, Piano, Costo) : Piano = lista di azioni che attua la
-%  decisone Dec con costo Cost.    MODO (++,--,--)  nondet
+% pianifica(Dec, Piano, Costo): Piano = lista di azioni che attua la
+% decisone Dec con costo Cost.
+% MODO (++,--,--)  nondet
 pred(tratta_decisione_impossibile(decisione,state,state)).
-%  tratta_decisione_impossibile(D,S1,S2)  :   S2 nuovo stato di conscenza,
-%   sapendo che D è impossibile nello stato S1.    MODO (++,++,--) det
+% tratta_decisione_impossibile(D,S1,S2): S2 nuovo stato di conscenza,
+% sapendo che D è impossibile nello stato S1.    
+% MODO (++,++,--) det
 
 
 % IMPLEMENTAZIONE DEI PREDICATI APERTI DI decisore

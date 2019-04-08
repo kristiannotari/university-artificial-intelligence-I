@@ -333,7 +333,7 @@ test_case(3, [
 	guida(p(2,interna)),
 	taglia_traguardo
 ]).
-% test di roba pianificata
+% test di azioni pianificate
 test_case(4, [
 	schierati,
 	guida(p(san_donato, interna)),
