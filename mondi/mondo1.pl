@@ -3,7 +3,29 @@
 user_unit(mondo1).
 % Un mondo con il tracciato del Mugello
 
-type([san_donato,luco,poggio_secco,1,2]:sezione).
+type([
+	rettifilo,
+	san_donato,
+	luco,
+	poggio_secco,
+	1,
+	materassi,
+	borgo_san_lorenzo,
+	2,
+	casanova,
+	savelli,
+	arrabbiata1,
+	arrabbiata2,
+	3,
+	scarperia,
+	palagio,
+	4,
+	correntaio,
+	biondetti1,
+	biondetti2,
+	5,
+	bucine
+]:sezione).
 type([interna,centrale,esterna]:traiettoria).
 
 %=============================================================================== MONDO DI GARA
@@ -20,52 +42,79 @@ type([interna,centrale,esterna]:traiettoria).
 giri(2).
 
 tracciato([
+	rettifilo,
 	san_donato,
 	luco,
-	1,
 	poggio_secco,
-	2
+	1,
+	materassi,
+	borgo_san_lorenzo,
+	2,
+	casanova,
+	savelli,
+	arrabbiata1,
+	arrabbiata2,
+	3,
+	scarperia,
+	palagio,
+	4,
+	correntaio,
+	biondetti1,
+	biondetti2,
+	5,
+	bucine
 ]).
+
+griglia(rettifilo,esterna).
+traguardo(rettifilo).
 
 curva(san_donato).
 curva(luco).
 curva(poggio_secco).
+curva(materassi).
+curva(borgo_san_lorenzo).
+curva(casanova).
+curva(savelli).
+curva(arrabbiata1).
+curva(arrabbiata2).
+curva(scarperia).
+curva(palagio).
+curva(correntaio).
+curva(biondetti1).
+curva(biondetti2).
+curva(bucine).
 
+rettilineo(rettifilo).
 rettilineo(1).
 rettilineo(2).
+rettilineo(3).
+rettilineo(4).
+rettilineo(5).
 
-pitlane_in(p(2,interna)).
-pitlane_out(p(san_donato,interna)).
-
-traiettoria(esterna).
-traiettoria(centrale).
 traiettoria(interna).
+traiettoria(centrale).
+traiettoria(esterna).
 
-avversario(hamilton, p(san_donato,esterna)).
-avversario(vettel, p(luco,esterna)).
+pitlane_in(bucine,esterna).
+pitlane_out(san_donato,interna).
 
-%=============================================================================== REGOLE DI GARA
+avversario(hamilton,san_donato,esterna).
+% avversario(vettel,luco,esterna).
 
-% cambio(T1,T2): è possibile un cambio di traiettoria da T1 a T2 solo se:
-%	- T1 o T2 sono "centrale" (ci si muove solo di una traiettoria per sezione)
-%	- T1 = T2
-cambio(T1,T2) :-
-	T1 = centrale;
-	T2 = centrale;
-	T1 = T2.
+%=============================================================================== COSTI DI GARA
 
-% calc_usura(S,T,Q,Q1):
-%	- S è una curva (T=interna->Q1=Q+1, T=centrale->Q1=Q+2, T=esterna->Q1=Q+3)
-%	- S è un rettilineo (T=interna->Q1=Q+1, T=centrale->Q1=Q+1, T=esterna->Q1=Q+1)
-calc_usura(S,interna,Q,Q1) :-
-	curva(S),
-	Q1 is Q + 1.
-calc_usura(S,centrale,Q,Q1) :-
-	curva(S),
-	Q1 is Q + 2.
-calc_usura(S,esterna,Q,Q1) :-
-	curva(S),
-	Q1 is Q + 3.
-calc_usura(S,_,Q,Q1) :-
-	rettilineo(S),
-	Q1 is Q + 1.
+costo(S,interna,1) :-
+	curva(S).
+costo(S,centrale,2) :-
+	curva(S).
+costo(S,esterna,3) :-
+	curva(S).
+costo(rettifilo,centrale,1).
+costo(1,centrale,1).
+costo(2,esterna,1).
+costo(3,esterna,1).
+costo(4,centrale,1).
+costo(5,centrale,1).
+costo(S,T,2) :-
+	traiettoria(T),
+	rettilineo(S).

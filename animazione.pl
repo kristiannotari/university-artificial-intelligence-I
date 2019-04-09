@@ -15,30 +15,39 @@ user_unit(animazione).
 
 mostra(schierato) :- !,
 	step,
-	writeln('schieramento:'),
-	write('\tmacchina(griglia)'),
-	forall(avversario(Nome,p(S,T)), (write(',\n\t'), write(avversario(Nome,S,T)))).
-mostra(partito(p(S,T),Q)) :- !,
+	writeln("schieramento:"),
+	write("\tmacchina(griglia)"),
+	forall(avversario(Nome,p(S,T)), (write(",\n\t"), write(avversario(Nome,S,T)))).
+mostra(partito) :- !,
+	step,
+	usura(Q),
+	in(p(S,T)),
+	giri(N),
+	griglia(S0,T0),
+	maplist(write, ["iniziata la gara (giro 1/", N, ")\n\tparto da ", S0, "[", T0, "] e vado in ", S, "[", T , "] (usura=", Q, ")"]).
+mostra(spostamento(p(S0,T0))) :- !,
+	step,
+	usura(Q),
+	in(p(S1,T1)),
+	maplist(write, ["guido da ", S0, "[", T0 , "] a ", S1, "[", T1, "] (usura=", Q, ")"]).
+mostra(fermato_ai_pit(p(S0,T0))) :- !,
+	step,
+	in(p(S1,T1)),
+	giro(G),
+	pitstop(P),
+	maplist(write, ["entro ai pit da ", S0, "[", T0, "], eseguo pitstop (usura pneumatici torna a 0, pitstop effettuati=", P, ")\n\tesco dai pit in ", S1, "[", T1 , "] e inizio il ", G, "° giro"]),
+	forall(avversario(Nome,p(S,T)), (write(",\n\t"), write(avversario(Nome,S,T)))).
+mostra(giro) :- !,
 	step,
 	giri(N),
-	maplist(write, ['iniziata la gara (giro 1/', N, ')\n\tparto e vado in ', S, '[', T , '] (usura=', Q, ')']).
-mostra(spostamento(p(S1,T1),p(S2,T2),Q)) :- !,
-	step,
-	maplist(write, ['guido da ', S1, '[', T1 , '] a ', S2, '[', T2, '] (usura=', Q, ')']).
-mostra(fermato_ai_pit(G,N,p(S,T))) :- !,
-	step,
-	maplist(write, ['eseguo pitstop (usura pneumatici torna a 0, pitstop effettuati=', N, ')\n\tesco dai pit in ', S, '[', T , '] e inizio il ', G, '° giro']),
-	forall(avversario(Nome,p(S1,T1)), (write(',\n\t'), write(avversario(Nome,S1,T1)))).
-mostra(giro(G)) :- !,
-	step,
-	giri(N),
+	giro(G),
 	G0 is G - 1,
-	maplist(write, ['completato il giro ', G0, '/', N]),
-	forall(avversario(Nome,p(S,T)), (write(',\n\t'), write(avversario(Nome,S,T)))).
+	maplist(write, ["completato il giro ", G0, "/", N, " e guidato in ", S, "[", T, "]"]),
+	forall(avversario(Nome,p(S,T)), (write(",\n\t"), write(avversario(Nome,S,T)))).
 mostra(arrivato) :- !,
 	step,
 	giri(N),
-	maplist(write, ['arrivato al traguardo dopo ', N, ' giri']).
+	maplist(write, ["arrivato al traguardo dopo ", N, " giri"]).
 
 mostra(Bo) :-
 	step,

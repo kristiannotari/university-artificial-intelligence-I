@@ -97,32 +97,24 @@ sposta_avversari_stato(Stato,A,D) :-
 		maplist(sposta_random(Stato),D,A).
 
 sposta_random(Stato,avversario(Nome,p(S0,T0)),avversario(Nome,P)) :-
-	findall(
-		p(S1,T1),
-		(
-			(
-				sez_succ(p(S0,T0),p(S1,T1))
-				;
-				sez_succ(p(S0,T0),traguardo),
-				sez_succ(p(S0,T0),p(S1,T1))
-			),
-			(				
-				not(member(in(p(S1,T1)),Stato)),
-				not(member(avversario(_,p(S1,T1)),Stato))
-			)
-		),
-		Soluzioni	
-	),
-	length(Soluzioni,N),
-	N > 0,
-	random(0,N,I),
-	Index is min(N-1,I),
-	(
-		nth0(Index,Soluzioni,P) %----------------------------------------------- scelta random punto avversario
-		;
-		true
+	setof(
+		(Costo, p(S1,T1)),
+		next(p(S0,T0),p(S1,T1),Stato), calc_costo(p(S1,T1), Costo),
+		[(_,P)|_]
 	).
 		
+next(p(S0,T0),p(S1,T1),Stato) :-
+	(
+		sez_succ(p(S0,T0),p(S1,T1))
+		;
+		sez_succ(p(S0,T0),traguardo),
+		sez_succ(griglia,p(S1,T1))
+	),
+	(				
+		not(member(in(p(S1,T1)),Stato)),
+		not(member(avversario(_,p(S1,T1)),Stato))
+	).
+	
 
 %=============================================================================== EURISTICHE
 % i commenti avete l'euristica 0, quella di base sottostimata
