@@ -95,6 +95,7 @@ traiettoria(interna).
 traiettoria(centrale).
 traiettoria(esterna).
 
+pitlane_costo(3).
 pitlane_in(bucine,esterna).
 pitlane_out(san_donato,interna).
 

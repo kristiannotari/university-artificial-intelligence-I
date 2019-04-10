@@ -3,14 +3,14 @@
 
 user_unit(animazione).
 % unità di animazione in senso lato:
-% "visualizza" il comporamento della macchina nel mondo virtuale
-% QUI:  mostra il coportamento passo-passo a livello testuale
+% "visualizza" il comportamento della macchina nel mondo virtuale
+% QUI: mostra il comportamento passo-passo a livello testuale
 % Ad ogni passo l'utente prosegue con ENTER
 % L'utente può anche abortire con a o chiedere di fare la trace con t
 %
 % IMPLEMENTA:
 % mostra(cambiamento).
-% con type([schieramento, partito(punto), spostamento(punto,punto), pitin, pistop, pitout, si_ferma]:cambiamento).
+% con type([schierato, partito, spostato(punto), fermato_ai_pit(punto), giro, arrivato]:cambiamento).
 % così come specificati in mondo_macchina.pl
 
 mostra(schierato) :- !,
@@ -25,7 +25,7 @@ mostra(partito) :- !,
 	giri(N),
 	griglia(S0,T0),
 	maplist(write, ["iniziata la gara (giro 1/", N, ")\n\tparto da ", S0, "[", T0, "] e vado in ", S, "[", T , "] (usura=", Q, ")"]).
-mostra(spostamento(p(S0,T0))) :- !,
+mostra(spostato(p(S0,T0))) :- !,
 	step,
 	usura(Q),
 	in(p(S1,T1)),

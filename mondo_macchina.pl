@@ -18,6 +18,8 @@ type([punto,box]:luogo).
 
 open_pred(tracciato(list)).
 % tracciato(L): lista ordinata delle sezioni del tracciato
+open_pred(pitlane_costo(number)).
+% pitlane_costo(Q): costo di attraversamento della pitlane
 open_pred(pitlane_in(sezione,traiettoria)).
 % pitlane_in(S,T): dal punto(S,T) si può accedere ai pit
 open_pred(pitlane_out(sezione,traiettoria)).
@@ -28,7 +30,7 @@ open_pred(traguardo(sezione)).
 % traguardo(S): S è una sezione con traguardo
 open_pred(costo(sezione,traiettoria,number)).
 % costo(S,T,Q): data una sezione S e una traiettoria T restituisce il costo (in 
-% 	usura) di quel punto
+% 	usura) Q di quel punto
 % MODO (+,+,-) det.
 open_pred(giri(number)).
 % giri(N): N numero di giri da effettuare
@@ -36,8 +38,8 @@ open_pred(giri(number)).
 
 pred(sez_succ(punto,punto)).
 % sez_succ(S1, S2): S2 è sezione successiva di S1 se:
-% 	- S1 precede di 1 come posizione nel tracciato S2
-%	- S2 è l'ultima sezione del tracciato e S1 è la prima
+% 	- S1 precede strettamente S2 nel tracciato
+%	- S2 è l'ultima sezione del tracciato e S1 è la prima (tracciato chiuso)
 % MODO (+,-) det.
 sez_succ(S1,S2) :-
 	tracciato(SS),
@@ -51,7 +53,7 @@ sez_succ(S1,S2) :-
 pred(usura_massima(number)).
 % usura_massima(Q): Q quantità massima di usura degli pneumatici della macchina
 % MODO (?) semidet.
-usura_massima(30).
+usura_massima(900).
 
 %===============================================================================  MONDO, PARTE DINAMICA
 
@@ -80,23 +82,21 @@ open_pred(avversario(atom,sezione,traiettoria)).
 
 type([schierati, guida(punto), effettua_pitstop, taglia_traguardo]:action).
 % le azioni
-type([schierato, partito, spostamento(punto), fermato_ai_pit(punto), giro, arrivato]:cambiamento).
+type([schierato, partito, spostato(punto), fermato_ai_pit(punto), giro, arrivato]:cambiamento).
 % schierato:
-%	la macchina viene schierata in griglia pronta a partire
-% partito(p(S,T),Q):
-%	la macchina dalla griglia passa alla sezione S in traiettoria T, Q è la
-%	nuova usura
-% spostamento(p(S1,T1),p(S2,T2),Q):
-%	la macchina passa alla sezione S1 in traiettoria T1 alla sezione S2 in
-%	traiettoria T2, e Q è la nuova usura
-% fermato_ai_pit(G,N,p(S,T)): 
-%	la macchina esegue il pitstop ai pit, effettuati N pitstop nella gara, e 
-%	rientra nella sezione S in traiettoria T nel corso del Gesimo giro
+%	la macchina dai box viene schierata in griglia pronta a partire
+% partito:
+%	la macchina dalla griglia guida verso la sua prima sezione
+% spostato(p(S,T)):
+%	la macchina passa in un nuovo punto, informando del suo vecchio punto dato da
+% 	S e T
+% fermato_ai_pit(p(S,T)): 
+%	la macchina esegue il pitstop ai pit, entrandovi dal punto(S,T)
 % giro:
-%	la macchina completa un giro passando dall'ultima sezione del tracciato al 
-%	traguardo
+%	la macchina completa un giro passando dalla sezione del tracciato a quella
+%	successiva
 % arrivato:
-%	la macchina termina la gara al traguardo
+%	la macchina termina la gara al traguardo e va ai box
 
 pred(esecuzione(action)).
 % esecuzione(A): 
@@ -115,7 +115,7 @@ clear_db :-
 	retractall(usura(_)),
 	retractall(pitstop(_)),
 	retractall(giro(_)),
-	retractall(avversario(_,_)),
+	retractall(avversario(_,_,_)),
 	nb_setval(step,0),
 	assert(in(box)),
 	consult(mondi/mondo1). % --------------------------------------------------- caricamento del mondo scelto
@@ -136,33 +136,26 @@ esecuzione(guida(p(S1,T1))) :-
 	check_guidabilita(p(S1,T1)),
 	check_usura(S1,T1,Q0,Q1),
 	giro(G),
+	R0 = [in(p(S0,T0)),usura(Q0)],
+	A0 = [in(p(S1,T1)),usura(Q1)],
 	(
-		R0 = [in(p(S0,T0)),usura(Q0)],
-		A0 = [in(p(S1,T1)),usura(Q1)],
-		(
-			caso_speciale_guida(G,p(S0,T0),R1,A1,C),
-			append(R0,R1,R),
-			append(A0,A1,A)
-			;
-			R = R0,
-			A = A0,
-			C = spostamento(p(S0,T0))
-		),
-		change(R,A,C)
-	).
+		caso_speciale_guida(G,p(S0,T0),R1,A1,C),
+		append(R0,R1,R),
+		append(A0,A1,A)
+		;
+		R = R0,
+		A = A0,
+		C = spostato(p(S0,T0))
+	),
+	change(R,A,C).
 esecuzione(effettua_pitstop) :-
 	in(p(S0,T0)),
 	pitlane_in(S0,T0),
-	pitlane_out(S1,T1),
-	check_guidabilita(p(S1,T1)),
-	usura(Q),
-	giro(G),
-	giri(N),
 	(
-		% se ho completato i giri ->
-		G =:= N ->
+		% se ho completato i giri
+		ultimo_giro ->
 		(
-			% termino la gara
+			% -> termino la gara
 			change(
 				[in(p(S0,T0))],
 				[in(box)],
@@ -171,8 +164,12 @@ esecuzione(effettua_pitstop) :-
 		)
 		;
 		(
-			%; altrimenti effettuo pitstop
+			% ; altrimenti effettuo pitstop
+			pitlane_out(S1,T1),
+			check_guidabilita(p(S1,T1)),
+			usura(Q),
 			pitstop(P),
+			giro(G),
 			P1 is P + 1,
 			G1 is G + 1,
 			sposta_avversari,
@@ -241,6 +238,7 @@ caso_speciale_guida(0,p(S0,T0),[giro(0)],[giro(1)],partito) :-
 % caso speciale guida "taglio del traguardo per nuovo giro"
 caso_speciale_guida(G,p(S0,_),[giro(G)],[giro(G1)],giro) :-
 	traguardo(S0),
+	sposta_avversari,
 	G1 is G + 1.
 
 pred(sposta_avversari).
@@ -277,6 +275,15 @@ sposta_avversari :-
 			assert(avversario(Nome,S1,T))
 		)
 	).
+
+pred(ultimo_giro).
+% ultimo_giro: verifica che sia l'ultimo giro (numero di giri attuale = numero 
+%	di giri da effettuare)
+% MODO: semidet.
+ultimo_giro :-
+	giro(G),
+	giri(N),
+	G =:= N.
 
 %===============================================================================  TESTING
 	
