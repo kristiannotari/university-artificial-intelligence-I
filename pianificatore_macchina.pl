@@ -1,7 +1,6 @@
 :- consult('rrs/forward_planner').
 :- consult('rrs/strips').
 :- consult(mondo_macchina).
-:- consult(conoscenza_macchina).
 :- multifile([type/1, pred/1, local_pred/1, open_pred/1, skipped/1, user_unit/1]).
 
 user_unit(pianificatore_macchina).
@@ -190,8 +189,7 @@ stato_iniziale(Stato) :-
 	list_to_ord_set([in(L),usura(Q),giro(G),pitstop(P)|ListaAvversari],Stato).
 
 stato_goal(Stato) :-
-	member(in(p(Traguardo,_)),Stato),
-	traguardo(Traguardo),
+	member(in(box),Stato),
 	member(usura(Q),Stato),
 	usura_massima(Qmax),
 	Q =< Qmax,
