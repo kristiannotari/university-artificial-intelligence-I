@@ -17,7 +17,7 @@ mostra(schierato) :- !,
 	step,
 	writeln("schieramento:"),
 	write("\tmacchina(griglia)"),
-	forall(avversario(Nome,p(S,T)), (write(",\n\t"), write(avversario(Nome,S,T)))).
+	forall(avversario(Nome,S,T), (write(",\n\t"), write(avversario(Nome,S,T)))).
 mostra(partito) :- !,
 	step,
 	usura(Q),
@@ -36,14 +36,14 @@ mostra(fermato_ai_pit(p(S0,T0))) :- !,
 	giro(G),
 	pitstop(P),
 	maplist(write, ["entro ai pit da ", S0, "[", T0, "], eseguo pitstop (usura pneumatici torna a 0, pitstop effettuati=", P, ")\n\tesco dai pit in ", S1, "[", T1 , "] e inizio il ", G, "° giro"]),
-	forall(avversario(Nome,p(S,T)), (write(",\n\t"), write(avversario(Nome,S,T)))).
+	forall(avversario(Nome,S,T), (write(",\n\t"), write(avversario(Nome,S,T)))).
 mostra(giro) :- !,
 	step,
 	giri(N),
 	giro(G),
 	G0 is G - 1,
 	maplist(write, ["completato il giro ", G0, "/", N, " e guidato in ", S, "[", T, "]"]),
-	forall(avversario(Nome,p(S,T)), (write(",\n\t"), write(avversario(Nome,S,T)))).
+	forall(avversario(Nome,S,T), (write(",\n\t"), write(avversario(Nome,S,T)))).
 mostra(arrivato) :- !,
 	step,
 	giri(N),

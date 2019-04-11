@@ -44,3 +44,8 @@ read_command(Prompt) :-
 	maplist(write, Prompt),
 	write(' '),
 	read_command.
+
+sCRIVI_PER_DEBUG([]).
+sCRIVI_PER_DEBUG([E|L]) :-
+	write(E),
+	sCRIVI_PER_DEBUG(L).

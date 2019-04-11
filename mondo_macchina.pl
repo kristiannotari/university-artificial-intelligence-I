@@ -53,7 +53,7 @@ sez_succ(S1,S2) :-
 pred(usura_massima(number)).
 % usura_massima(Q): Q quantità massima di usura degli pneumatici della macchina
 % MODO (?) semidet.
-usura_massima(900).
+usura_massima(10).
 
 %===============================================================================  MONDO, PARTE DINAMICA
 
@@ -221,9 +221,9 @@ pred(check_guidabilita(punto)).
 % MODO: (+) semidet.
 check_guidabilita(p(S1,T1)) :-
 	(
-		not(avversario(_,p(S1,T1))), !
+		not(avversario(_,S1,T1)), !
 		;
-		avversario(Nome,p(S1,T1)),
+		avversario(Nome,S1,T1),
 		throw(punto_occupato_macchina(Nome,p(S1,T1))) %--------------------------------- throw punto occupato macchina
 	).
 
@@ -372,5 +372,31 @@ test_case(2, [
 		taglia_traguardo
 	]).
 % test di azioni pianificate
+% giri = 5
+% usura = 10
 test_case(3, [
+	schierati,
+	guida(p(san_donato, interna)),
+	guida(p(luco, interna)),
+	guida(p(1, centrale)),
+	guida(p(bucine, esterna)),
+	effettua_pitstop,
+	guida(p(luco, centrale)),
+	guida(p(1, centrale)),
+	guida(p(bucine, esterna)),
+	effettua_pitstop,
+	guida(p(luco, interna)),
+	guida(p(1, esterna)),
+	guida(p(bucine, esterna)),
+	effettua_pitstop,
+	guida(p(luco, interna)),
+	guida(p(1, centrale)),
+	guida(p(bucine, centrale)),
+	guida(p(rettifilo, centrale)),
+	guida(p(san_donato, interna)),
+	guida(p(luco, interna)),
+	guida(p(1, centrale)),
+	guida(p(bucine, interna)),
+	guida(p(rettifilo, centrale)),
+	taglia_traguardo
 ]).	  

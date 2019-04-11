@@ -27,8 +27,8 @@ local_pred(h(p_node,number)).
 add_del(guida(p(S1,T1)),Stato,Add,Del,Costo) :-
 	member(in(p(S0,T0)),Stato),
 	sez_succ(S0,S1),
-	not(member(avversario(_,S1,T1),Stato)),
 	check_usura_stato(Stato,S1,T1,Q0,Q1),
+	not(member(avversario(_,S1,T1),Stato)),
 	member(giro(G),Stato),
 	A0 = [in(p(S1,T1)),usura(Q1)],
 	D0 = [in(p(S0,T0)),usura(Q0)],
@@ -41,12 +41,10 @@ add_del(guida(p(S1,T1)),Stato,Add,Del,Costo) :-
 		Del = D0
 	),
 	Costo is Q1 - Q0.
-
 add_del(effettua_pitstop,Stato,Add,Del,Costo) :-
 	member(in(p(S0,T0)),Stato),
 	pitlane_in(S0,T0),
 	pitlane_costo(C),
-	maplist(write, ["\n\nCOSTO: ", C]),
 	(
 		% se ho completato i giri
 		ultimo_giro_stato(Stato) ->
@@ -84,7 +82,7 @@ add_del(taglia_traguardo,Stato,[in(box)],[in(p(S,T))],0) :-
 pred(check_usura_stato(p_node,sezione,traiettoria,number,number)).
 % come check_usura di mondo_macchina ma controllo usura come fluente dello stato
 check_usura_stato(Stato,S,T,Q0,Q1) :-
-	member(usura(Q),Stato),
+	member(usura(Q0),Stato),
 	costo(S,T,Q),
 	Q1 is Q0 + Q,
 	usura_massima(Qmax),
@@ -116,7 +114,7 @@ sposta_avversari_stato(Stato,A,D) :-
 		setof(avversario(Nome,S,T),member(avversario(Nome,S,T),Stato),D),
 		maplist(sposta_avversario_stato(Stato),D,A).
 
-sposta_avversario_stato(Stato,avversario(Nome,S0,_),avversario(Nome,S1,Tscelta)) :-
+sposta_avversario_stato(Stato,avversario(Nome,S0,_),avversario(Nome,S1,T)) :-
 	sez_succ(S0,S1),
 	setof(
 		(Costo,T1),
@@ -125,7 +123,7 @@ sposta_avversario_stato(Stato,avversario(Nome,S0,_),avversario(Nome,S1,Tscelta))
 			not(member(in(p(S1,T1)),Stato)),
 			not(member(avversario(_,S1,T1),Stato))
 		),
-		[(_,Tscelta)|_]
+		[(_,T)|_]
 	).
 	
 pred(ultimo_giro_stato(p_node)).
@@ -192,19 +190,18 @@ stato_iniziale(Stato) :-
 	list_to_ord_set([in(L),usura(Q),giro(G),pitstop(P)|ListaAvversari],Stato).
 
 stato_goal(Stato) :-
-	member(in(san_donato,interna),Stato).
-	% member(in(p(Traguardo,_)),Stato),
-	% traguardo(Traguardo),
-	% member(usura(Q),Stato),
-	% usura_massima(Qmax),
-	% Q =< Qmax,
-	% member(giro(G),Stato),
-	% giri(N),
-	% G =:= N,
+	member(in(p(Traguardo,_)),Stato),
+	traguardo(Traguardo),
+	member(usura(Q),Stato),
+	usura_massima(Qmax),
+	Q =< Qmax,
+	member(giro(G),Stato),
+	giri(N),
+	G =:= N,
 
-	% setof(avversario(Nome,S,T),member(avversario(Nome,S,T),Stato),D),
-	% maplist(write, ['\n\nAVVERSARI: ', D]),
-	% maplist(write, ['\nUSURA: ', Q, '/', Qmax, '\n\n']).
+	setof(avversario(Nome,S,T),member(avversario(Nome,S,T),Stato),D),
+	maplist(write, ['\n\nAVVERSARI: ', D]),
+	maplist(write, ['\nUSURA: ', Q, '/', Qmax, '\n\n']).
 
 % Uso i predicati stato_iniziale/2 e stato_goal/1 per passare stato iniziale e
 % stato goal al planner
