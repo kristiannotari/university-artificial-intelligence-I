@@ -76,8 +76,8 @@ pred(decidi(state,decisione)).
 pred(do_action(action,state,state)).
 % do_action(A,S1,S2):  esegui A nello stato S1 con transizione a S2.
 % MODO(++,++,--) det   (nondet con azioni con effetto non deterministico)
-pred(pianifica(decisione,list(action),number)).
-% pianifica(Dec,Piano,Costo): Piano = lista di azioni che attua la
+pred(pianifica(decisione,state,state,list(action),number)).
+% pianifica(Dec,S0,S1,Piano,Costo): Piano = lista di azioni che attua la
 % decisone Dec con costo Costo.
 % MODO (++,--,--)  nondet
 pred(tratta_decisione_impossibile(decisione,state,state)).
@@ -101,7 +101,7 @@ decidi(UNKNOWN,_) :-
 
 %=============================================================================== PIANIFICAZIONE, eccezioni e decisione impossibile
 
-pianifica(gareggia, Plan, Cost) :-
+pianifica(gareggia,_,in_gara,Plan,Cost) :-
 	%  in questo caso basta usare piano/3
 	piano(gareggia, Plan, Cost).
 
