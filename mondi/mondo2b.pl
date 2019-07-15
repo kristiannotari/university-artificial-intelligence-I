@@ -39,29 +39,29 @@ type([interna,centrale,esterna]:traiettoria).
 %	- avversari
 % "Minima" usura massima = 5 per 1 giro
 
-giri(5).
+giri(3).
 
 tracciato([
 	rettifilo,
 	san_donato,
 	luco,
-	% poggio_secco,
+	poggio_secco,
 	1,
-	% materassi,
-	% borgo_san_lorenzo,
-	% 2,
-	% casanova,
-	% savelli,
-	% arrabbiata1,
-	% arrabbiata2,
-	% 3,
-	% scarperia,
-	% palagio,
-	% 4,
-	% correntaio,
-	% biondetti1,
-	% biondetti2,
-	% 5,
+	materassi,
+	borgo_san_lorenzo,
+	2,
+	casanova,
+	savelli,
+	arrabbiata1,
+	arrabbiata2,
+	3,
+	scarperia,
+	palagio,
+	4,
+	correntaio,
+	biondetti1,
+	biondetti2,
+	5,
 	bucine
 ]).
 
@@ -100,7 +100,7 @@ pitlane_in(bucine,esterna).
 pitlane_out(san_donato,interna).
 
 avversario(hamilton,san_donato,esterna).
-% avversario(vettel,luco,esterna).
+% avversario(vettel,casanova,interna).
 
 %=============================================================================== COSTI DI GARA
 

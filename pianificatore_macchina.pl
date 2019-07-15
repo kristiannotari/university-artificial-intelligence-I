@@ -135,27 +135,48 @@ ultimo_giro_stato(Stato) :-
 	G =:= N.
 
 %=============================================================================== EURISTICHE
-% i commenti avete l'euristica 0, quella di base sottostimata
-% e con la propietà triangolare, quella resa aggressiva moltiplicando
-% per 4, non più sottostimata
 
-h(_St,0) :- !.
+h_avversari_costo([],0).
+h_avversari_costo([avversario(_,S,T)|Tail],Costo) :-
+	h_avversari_costo(Tail,C1),
+	costo(S,T,C2),
+	Costo is C1 + C2.
 
-% h(St,H)	:- capacita(C),
-% 	(   setof(sporco(S,Q), (member(sporco(S,Q),St), Q>0), QQ)
-% 	;   QQ=[]),!,
-% 	sum(QQ,0,H,C).
-% 	%sum(QQ,0,H1,C),
-%         %H is 4*H1.
+% (4) EURISTICA eliminazione vincolo usura e pitstop
+% h(Stato,Costo) :-
+% 	(
+% 		member(in(p(S,T)),Stato),
+% 		(
+% 			pitlane_out(S,T),
+% 			member(usura(0),Stato),
+% 			pitlane_costo(C2),
+% 			Costo is (- C2)
+% 			;
+% 			costo(S,T,C1),
+% 			Costo is (- C1)
+% 		)
+% 	).
 
-% sum([],Sum,Sum,_).
-% sum([Q|QQ],Sum1,Sum2,C) :-
-% 	sum_stanza(Q,Sum1,Sum,C),
-% 	sum(QQ,Sum,Sum2,C).
+% (3) EURISTICA eliminazione vincolo usura
+% h(Stato,Costo) :-
+% 	(
+% 		member(in(p(S,T)),Stato), costo(S,T,C1),
+% 		Costo is (- C1)
+% 	).
 
-% sum_stanza(sporco(S,Q), Sum1, Sum2,C) :-
-% 	distanza_balcone(S,D),
-% 	Sum2 is Sum1 + Q + D*(Q div C + 1).
+% (2) EURISTICA enfasi a costo traiettoria e costo traiettoria avversari 
+% h(Stato,Costo) :-
+% 	setof(avversario(Nome,Savv,Tavv),member(avversario(Nome,Savv,Tavv),Stato),Avversari),
+% 	h_avversari_costo(Avversari,C2),
+% 	member(in(p(S,T)),Stato), costo(S,T,C1),
+% 	Costo is (C1 + C2) * 4.
+
+% (1) EURISTICA enfasi costo traiettoria
+% h(Stato,Costo) :-
+% 	member(in(p(S,T)),Stato), costo(S,T,C),
+% 	Costo is (C * 4).
+
+h(_,0) :- !.
 
 %=============================================================================== PIANIFICAZIONE E START-GOAL
 
@@ -180,6 +201,7 @@ stato_iniziale(Stato) :-
 		ListaAvversari = [];
 		setof(avversario(Nome,S,T),avversario(Nome,S,T),ListaAvversari)
 	),
+
 	in(L),
 	usura(Q),
 	giro(G),
@@ -210,24 +232,3 @@ piano(gareggia,Plan,Cost) :-
 			     _Goal,
 			     Cost,
 				 Plan).
-
-%===============================================================================   TEST EURISTICHE
-
-test(K, Cost, Plan) :-
-	plan(stato_iniziale(K), stato_goal, _Path,_,Plan, Cost).
-
-stato_iniziale(1, S) :-
-   consult(mondi/mondo1),
-   list_to_ord_set([in(griglia),usura(0),pitstop(0),giro(0)],S).
-stato_iniziale(2, S) :-
-    consult(mondi/mondo1),
-   list_to_ord_set([in(balcone),raccolto(0),
-		    sporco(a,66), sporco(b,30), sporco(c,35), sporco(d,50)], S).
-
-stato_iniziale(3, S) :-
-    consult(mondi/mondo2),
-   list_to_ord_set([in(balcone),raccolto(0),
-		    sporco(a,66), sporco(b,30), sporco(c,35), sporco(d,40),sporco(e,20)], S).
-
-
-

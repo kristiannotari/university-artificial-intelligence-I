@@ -53,7 +53,7 @@ sez_succ(S1,S2) :-
 pred(usura_massima(number)).
 % usura_massima(Q): Q quantità massima di usura degli pneumatici della macchina
 % MODO (?) semidet.
-usura_massima(10).
+usura_massima(40).
 
 %===============================================================================  MONDO, PARTE DINAMICA
 
@@ -118,7 +118,7 @@ clear_db :-
 	retractall(avversario(_,_,_)),
 	nb_setval(step,0),
 	assert(in(box)),
-	consult(mondi/mondo1). % --------------------------------------------------- caricamento del mondo scelto
+	consult(mondi/mondo1a). % --------------------------------------------------- caricamento del mondo scelto
 :- clear_db.
 
 esecuzione(schierati) :-
