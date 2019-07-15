@@ -4,6 +4,11 @@ Kristian Notari 892708
 
 Relazione per il progetto di Intelligenza Artificiale I
 
+- [Obiettivo](#Obiettivo)
+- [Modalità e vincoli](#Modalità-e-vincoli)
+- [Organizzazione codice](#Organizzazione-codice)
+- [Manuale d'uso](#Manuale-duso)
+
 ## Obiettivo
 
 Il progetto consiste nell'implementazione di un agente con conoscenza incompleta, che gestisca e pianifichi il ciclo di vita di una macchina da corsa all'interno di un circuito con avversari (altre macchine).
