@@ -16,8 +16,6 @@ type(open:traiettoria).
 type(p(sezione,traiettoria):punto).
 type([punto,box]:luogo).
 
-open_pred(tracciato(list)).
-% tracciato(L): lista ordinata delle sezioni del tracciato
 open_pred(pitlane_costo(number)).
 % pitlane_costo(Q): costo di attraversamento della pitlane
 open_pred(pitlane_in(sezione,traiettoria)).
@@ -35,20 +33,11 @@ open_pred(costo(sezione,traiettoria,number)).
 open_pred(giri(number)).
 % giri(N): N numero di giri da effettuare
 % MODO (?) semidet.
-
-pred(sez_succ(punto,punto)).
+open_pred(sez_succ(punto,punto)).
 % sez_succ(S1, S2): S2 è sezione successiva di S1 se:
 % 	- S1 precede strettamente S2 nel tracciato
 %	- S2 è l'ultima sezione del tracciato e S1 è la prima (tracciato chiuso)
 % MODO (+,-) det.
-sez_succ(S1,S2) :-
-	tracciato(SS),
-	(
-		append(_, [S1|[S2|_]], SS)
-		;
-		SS = [S2|_],
-		last(SS,S1)
-	).
 
 pred(usura_massima(number)).
 % usura_massima(Q): Q quantità massima di usura degli pneumatici della macchina
@@ -307,96 +296,37 @@ test_case(1, [
 	guida(p(luco,centrale)),
 	guida(p(poggio_secco,interna)),
 	guida(p(1,centrale)),
-	guida(p(materassi,interna)),
 	guida(p(borgo_san_lorenzo,interna)),
 	guida(p(2,interna)),
-	guida(p(casanova,interna)),
-	guida(p(savelli,interna)),
-	guida(p(arrabbiata1,interna)),
-	guida(p(arrabbiata2,interna)),
-	guida(p(3,interna)),
-	guida(p(scarperia,interna)),
-	guida(p(palagio,interna)),
-	guida(p(4,interna)),
-	guida(p(correntaio,interna)),
-	guida(p(biondetti1,interna)),
-	guida(p(biondetti2,interna)),
-	guida(p(5,interna)),
 	guida(p(bucine,interna)),
 	guida(p(rettifilo,interna)),
 	taglia_traguardo
 ]).
 test_case(2, [
-		schierati,
-		guida(p(san_donato,centrale)),
-		guida(p(luco,centrale)),
-		guida(p(poggio_secco,interna)),
-		guida(p(1,centrale)),
-		guida(p(materassi,interna)),
-		guida(p(borgo_san_lorenzo,interna)),
-		guida(p(2,interna)),
-		guida(p(casanova,interna)),
-		guida(p(savelli,interna)),
-		guida(p(arrabbiata1,interna)),
-		guida(p(arrabbiata2,interna)),
-		guida(p(3,interna)),
-		guida(p(scarperia,interna)),
-		guida(p(palagio,interna)),
-		guida(p(4,interna)),
-		guida(p(correntaio,interna)),
-		guida(p(biondetti1,interna)),
-		guida(p(biondetti2,interna)),
-		guida(p(5,interna)),
-		guida(p(bucine,esterna)),
-		effettua_pitstop,
-		guida(p(luco,centrale)),
-		guida(p(poggio_secco,interna)),
-		guida(p(1,centrale)),
-		guida(p(materassi,interna)),
-		guida(p(borgo_san_lorenzo,interna)),
-		guida(p(2,interna)),
-		guida(p(casanova,interna)),
-		guida(p(savelli,interna)),
-		guida(p(arrabbiata1,interna)),
-		guida(p(arrabbiata2,interna)),
-		guida(p(3,interna)),
-		guida(p(scarperia,interna)),
-		guida(p(palagio,interna)),
-		guida(p(4,interna)),
-		guida(p(correntaio,interna)),
-		guida(p(biondetti1,interna)),
-		guida(p(biondetti2,interna)),
-		guida(p(5,interna)),
-		guida(p(bucine,esterna)),
-		guida(p(rettifilo,centrale)),
-		taglia_traguardo
-	]).
-% test di azioni pianificate
-% giri = 5
-% usura = 10
-test_case(3, [
 	schierati,
-	guida(p(san_donato, interna)),
-	guida(p(luco, interna)),
-	guida(p(1, centrale)),
-	guida(p(bucine, esterna)),
-	effettua_pitstop,
-	guida(p(luco, centrale)),
-	guida(p(1, centrale)),
-	guida(p(bucine, esterna)),
-	effettua_pitstop,
-	guida(p(luco, interna)),
-	guida(p(1, esterna)),
-	guida(p(bucine, esterna)),
-	effettua_pitstop,
-	guida(p(luco, interna)),
-	guida(p(1, centrale)),
-	guida(p(bucine, centrale)),
-	guida(p(rettifilo, centrale)),
-	guida(p(san_donato, interna)),
-	guida(p(luco, interna)),
-	guida(p(1, centrale)),
-	guida(p(bucine, interna)),
-	guida(p(rettifilo, centrale)),
+	guida(p(san_donato,centrale)),
+	guida(p(luco,centrale)),
+	guida(p(poggio_secco,interna)),
+	guida(p(1,centrale)),
+	guida(p(borgo_san_lorenzo,interna)),
+	guida(p(2,interna)),
+	guida(p(bucine,interna)),
+	guida(p(rettifilo,interna)),
+	guida(p(san_donato,centrale)),
+	guida(p(luco,centrale)),
+	guida(p(poggio_secco,centrale)),
+	guida(p(1,centrale)),
+	guida(p(borgo_san_lorenzo,interna)),
+	guida(p(2,interna)),
+	guida(p(bucine,interna)),
+	guida(p(rettifilo,interna)),
+	guida(p(san_donato,centrale)),
+	guida(p(luco,centrale)),
+	guida(p(poggio_secco,centrale)),
+	guida(p(1,centrale)),
+	guida(p(borgo_san_lorenzo,interna)),
+	guida(p(2,interna)),
+	guida(p(bucine,interna)),
+	guida(p(rettifilo,interna)),
 	taglia_traguardo
-]).	  
+]).

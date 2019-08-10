@@ -12,27 +12,27 @@ Usura massima: 40
 
 | Proprietà             | Mondo 1a           | Mondo 1b | Mondo 2a | Mondo 2b |
 | --------------------- | ------------------ | -------- | -------- | -------- |
-| nodi espansi          | 980                | -        | -        | -        |
-| iterazioni            | 572                | -        | -        | -        |
+| nodi espansi          | 22                | -        | -        | -        |
+| iterazioni            | 36                | -        | -        | -        |
 | profondita' soluzione | 10                 | -        | -        | -        |
 | costo                 | 8                  | -        | -        | -        |
-| b                     | 1.9912354139965147 | -        | -        | -        |
+| b                     | 1.362204366553743 | -        | -        | -        |
 
-## Euristica 1: enfasi costo traiettoria
+## Euristica 1: distanza ancora da percorrere (in costo)
 
 ### Obiettivo
 
-Enfatizzo il costo della traiettoria, andando a preferire di gran lunga ramificazioni con scelte di traiettoria a costo ridotto.
+Calcolo la distanza (in costo) ancora da percorrere per arrivare al traguardo con la seguente formula: `numero di giri rimanenti * lunghezza giro * costo minimo traiettoria + costo traiettoria attuale` dove la lunghezza del giro è data dal conteggio delle sezioni presenti nel circuito.
 
 ### Risultati
 
 | Proprietà             | Mondo 1a           | Mondo 1b           | Mondo 2a           | Mondo 2b |
 | --------------------- | ------------------ | ------------------ | ------------------ | -------- |
-| nodi espansi          | 220                | 32713              | 5594               | -        |
-| iterazioni            | 136                | 28564              | 4928               | -        |
+| nodi espansi          | 22                | 32713              | 5594               | -        |
+| iterazioni            | 36                | 28564              | 4928               | -        |
 | profondita' soluzione | 10                 | 26                 | 23                 | -        |
 | costo                 | 8                  | 26                 | 21                 | -        |
-| b                     | 1.7149136931114837 | 1.4915681161867618 | 1.4552729430739644 | -        |
+| b                     | 1.362204366553743 | 1.4915681161867618 | 1.4552729430739644 | -        |
 
 ## Euristica 2: enfasi costo traiettoria e costo traiettoria avversari
 

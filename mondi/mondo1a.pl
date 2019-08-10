@@ -1,7 +1,7 @@
 :- multifile([type/1, pred/1, local_pred/1, open_pred/1, skipped/1, user_unit/1]).
 
-user_unit(mondo1).
-% Un mondo con il tracciato del Mugello (ridotto)
+user_unit(mondo1a).
+% Un mondo con il tracciato del Mugello (ridotto) e 1 giro
 
 type([
 	rettifilo,
@@ -31,7 +31,7 @@ type([interna,centrale,esterna]:traiettoria).
 %=============================================================================== MONDO DI GARA
 % Mondo di gara descritto attraverso la definizione di:
 %	- numero giri
-%	- tracciato
+%	- tracciato (sez_succ)
 %	- curve
 %	- rettilinei
 %	- pitlane in e out
@@ -41,29 +41,29 @@ type([interna,centrale,esterna]:traiettoria).
 
 giri(1).
 
-tracciato([
-	rettifilo,
-	san_donato,
-	luco,
-	poggio_secco,
-	1,
-	% materassi,
-	borgo_san_lorenzo,
-	2,
-	% casanova,
-	% savelli,
-	% arrabbiata1,
-	% arrabbiata2,
-	% 3,
-	% scarperia,
-	% palagio,
-	% 4,
-	% correntaio,
-	% biondetti1,
-	% biondetti2,
-	% 5,
-	bucine
-]).
+sez_succ(rettifilo,san_donato).
+sez_succ(san_donato,luco).
+sez_succ(luco,poggio_secco).
+sez_succ(poggio_secco,1).
+sez_succ(1,borgo_san_lorenzo). % riduzione
+% sez_succ(1,materassi).
+% sez_succ(materassi,borgo_san_lorenzo).
+sez_succ(borgo_san_lorenzo,2).
+sez_succ(2,bucine). % riduzione
+% sez_succ(2,casanova).
+% sez_succ(casanova,savelli).
+% sez_succ(savelli,arrabbiata1).
+% sez_succ(arrabbiata1,arrabbiata2).
+% sez_succ(arrabbiata2,3).
+% sez_succ(3,scarperia).
+% sez_succ(scarperia,palagio).
+% sez_succ(palagio,4).
+% sez_succ(4,correntaio).
+% sez_succ(correntaio,biondetti1).
+% sez_succ(biondetti1,biondetti2).
+% sez_succ(biondetti2,5).
+% sez_succ(5,bucine).
+sez_succ(bucine,rettifilo).
 
 griglia(rettifilo,esterna).
 traguardo(rettifilo).
@@ -104,18 +104,18 @@ avversario(hamilton,san_donato,esterna).
 
 %=============================================================================== COSTI DI GARA
 
+% costo(rettifilo,centrale,1) :- !.
+% costo(1,centrale,1) :- !.
+% costo(2,esterna,1) :- !.
+% costo(3,esterna,1) :- !.
+% costo(4,centrale,1) :- !.
+% costo(5,centrale,1) :- !.
+costo(S,T,2) :-
+	traiettoria(T),
+	rettilineo(S).
 costo(S,interna,1) :-
 	curva(S).
 costo(S,centrale,2) :-
 	curva(S).
 costo(S,esterna,3) :-
 	curva(S).
-costo(rettifilo,centrale,1).
-costo(1,centrale,1).
-costo(2,esterna,1).
-costo(3,esterna,1).
-costo(4,centrale,1).
-costo(5,centrale,1).
-costo(S,T,2) :-
-	traiettoria(T),
-	rettilineo(S).
