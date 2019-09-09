@@ -99,23 +99,23 @@ pitlane_costo(3).
 pitlane_in(bucine,esterna).
 pitlane_out(san_donato,interna).
 
-avversario(hamilton,san_donato,esterna).
+% avversario(hamilton,san_donato,esterna).
 % avversario(vettel,casanova,interna).
 
 %=============================================================================== COSTI DI GARA
 
-% costo(rettifilo,centrale,1) :- !.
-% costo(1,centrale,1) :- !.
-% costo(2,esterna,1) :- !.
-% costo(3,esterna,1) :- !.
-% costo(4,centrale,1) :- !.
-% costo(5,centrale,1) :- !.
+costo(rettifilo,centrale,1) :- !.
+costo(1,centrale,1) :- !.
+costo(2,esterna,1) :- !.
+costo(3,esterna,1) :- !.
+costo(4,centrale,1) :- !.
+costo(5,centrale,1) :- !.
 costo(S,T,2) :-
 	traiettoria(T),
-	rettilineo(S).
+	rettilineo(S),!.
 costo(S,interna,1) :-
-	curva(S).
+	curva(S),!.
 costo(S,centrale,2) :-
-	curva(S).
+	curva(S),!.
 costo(S,esterna,3) :-
-	curva(S).
+	curva(S),!.

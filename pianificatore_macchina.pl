@@ -40,41 +40,41 @@ add_del(guida(p(S1,T1)),Stato,Add,Del,Costo) :-
 		Del = D0
 	),
 	Costo is Q1 - Q0.
-% add_del(effettua_pitstop,Stato,Add,Del,Costo) :-
-% 	member(in(p(S0,T0)),Stato),
-% 	pitlane_in(S0,T0),
-% 	pitlane_costo(C),
-% 	(
-% 		% se ho completato i giri
-% 		ultimo_giro_stato(Stato) ->
-% 		(
-% 			% -> termino la gara
-% 			Add = [in(box)],
-% 			Del = [in(p(S0,T0))],
-% 			Costo is C
-% 		)
-% 		;
-% 		(
-% 			% ; altrimenti effettuo pitstop
-% 			pitlane_out(S1,T1),
-% 			not(member(avversario(_,S1,T1),Stato)),
-% 			member(usura(Q),Stato),
-% 			member(pitstop(P),Stato),
-% 			member(giro(G),Stato),
-% 			P1 is P + 1,
-% 			G1 is G + 1,
-% 			A0 = [usura(0),pitstop(P1),in(p(S1,T1)),giro(G1)],
-% 			D0 = [usura(Q),pitstop(P),in(p(S0,T0)),giro(G)],
-% 			sposta_avversari_stato(Stato,A1,D1),
-% 			append(A0,A1,Add),
-% 			append(D0,D1,Del),
-% 			Costo is C + Q * 1
-% 		)
-% 	).
-% add_del(taglia_traguardo,Stato,[in(box)],[in(p(S,T))],0) :-
-% 	member(in(p(S,T)),Stato),
-% 	traguardo(S),
-% 	ultimo_giro_stato(Stato).
+add_del(effettua_pitstop,Stato,Add,Del,Costo) :-
+	member(in(p(S0,T0)),Stato),
+	pitlane_in(S0,T0),
+	pitlane_costo(C),
+	(
+		% se ho completato i giri
+		ultimo_giro_stato(Stato) ->
+		(
+			% -> termino la gara
+			Add = [in(box)],
+			Del = [in(p(S0,T0))],
+			Costo is C
+		)
+		;
+		(
+			% ; altrimenti effettuo pitstop
+			pitlane_out(S1,T1),
+			not(member(avversario(_,S1,T1),Stato)),
+			member(usura(Q),Stato),
+			member(pitstop(P),Stato),
+			member(giro(G),Stato),
+			P1 is P + 1,
+			G1 is G + 1,
+			A0 = [usura(0),pitstop(P1),in(p(S1,T1)),giro(G1)],
+			D0 = [usura(Q),pitstop(P),in(p(S0,T0)),giro(G)],
+			sposta_avversari_stato(Stato,A1,D1),
+			append(A0,A1,Add),
+			append(D0,D1,Del),
+			Costo is C + Q * 1
+		)
+	).
+add_del(taglia_traguardo,Stato,[in(box)],[in(p(S,T))],0) :-
+	member(in(p(S,T)),Stato),
+	traguardo(S),
+	ultimo_giro_stato(Stato).
 
 %=============================================================================== UTILS
 
@@ -136,13 +136,24 @@ ultimo_giro_stato(Stato) :-
 
 %=============================================================================== EURISTICHE
 
-% % (1) EURISTICA distanza ancora da percorrere (in costo)
+% (1) EURISTICA distanza ancora da percorrere (in costo)
 % h(Stato,C) :-
 % 	giri(G), giro(N), R is G - N,
 % 	aggregate_all(count, sez_succ(S1,S2), L),
 % 	member(in(p(S,T)),Stato), costo(S,T,CT),
 % 	% numero di giri restanti * lunghezza giro * costo minimo traiettoria (1) + costo traiettoria attuale
 % 	C is R * L * 1 + CT.
+
+% (2) EURISTICA pitstop ancora necessari
+h(Stato,C) :-
+	giri(G), giro(N), R is G - N,
+	aggregate_all(count, sez_succ(S1,S2), L),
+	usura_massima(Qmax),
+	member(in(p(S,T)),Stato), costo(S,T,CT),
+	% numero di giri restanti * lunghezza giro * costo minimo traiettoria (1) / usura massima
+	C0 is R * L * 1,
+	C1 is div(C0, Qmax) + 1,
+	C is C1 * 4.
 
 h(_,0) :- !.
 
@@ -187,10 +198,7 @@ stato_goal(Stato) :-
 	giri(N),
 	G =:= N,
 
-	setof(avversario(Nome,S,T),member(avversario(Nome,S,T),Stato),D),
-	writeln("\n\nFINE"),
-	maplist(write, ['AVVERSARI: ', D]),
-	maplist(write, ['\nUSURA: ', Q, '/', Qmax, '\n\n']).
+	maplist(write, ["STATO FINALE: ", Stato]).
 
 % Uso i predicati stato_iniziale/2 e stato_goal/1 per passare stato iniziale e
 % stato goal al planner

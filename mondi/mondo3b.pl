@@ -1,7 +1,7 @@
 :- multifile([type/1, pred/1, local_pred/1, open_pred/1, skipped/1, user_unit/1]).
 
-user_unit(mondo2a).
-% Un mondo con il tracciato del Mugello e 1 giro
+user_unit(mondo3b).
+% Un mondo con il tracciato del Mugello (ridotto), 3 giri e 1 avversario
 
 type([
 	rettifilo,
@@ -39,28 +39,30 @@ type([interna,centrale,esterna]:traiettoria).
 %	- avversari
 % "Minima" usura massima = 5 per 1 giro
 
-giri(1).
+giri(3).
 
 sez_succ(rettifilo,san_donato).
 sez_succ(san_donato,luco).
 sez_succ(luco,poggio_secco).
 sez_succ(poggio_secco,1).
-sez_succ(1,materassi).
-sez_succ(materassi,borgo_san_lorenzo).
+sez_succ(1,borgo_san_lorenzo). % riduzione
+% sez_succ(1,materassi).
+% sez_succ(materassi,borgo_san_lorenzo).
 sez_succ(borgo_san_lorenzo,2).
-sez_succ(2,casanova).
-sez_succ(casanova,savelli).
-sez_succ(savelli,arrabbiata1).
-sez_succ(arrabbiata1,arrabbiata2).
-sez_succ(arrabbiata2,3).
-sez_succ(3,scarperia).
-sez_succ(scarperia,palagio).
-sez_succ(palagio,4).
-sez_succ(4,correntaio).
-sez_succ(correntaio,biondetti1).
-sez_succ(biondetti1,biondetti2).
-sez_succ(biondetti2,5).
-sez_succ(5,bucine).
+sez_succ(2,bucine). % riduzione
+% sez_succ(2,casanova).
+% sez_succ(casanova,savelli).
+% sez_succ(savelli,arrabbiata1).
+% sez_succ(arrabbiata1,arrabbiata2).
+% sez_succ(arrabbiata2,3).
+% sez_succ(3,scarperia).
+% sez_succ(scarperia,palagio).
+% sez_succ(palagio,4).
+% sez_succ(4,correntaio).
+% sez_succ(correntaio,biondetti1).
+% sez_succ(biondetti1,biondetti2).
+% sez_succ(biondetti2,5).
+% sez_succ(5,bucine).
 sez_succ(bucine,rettifilo).
 
 griglia(rettifilo,esterna).
@@ -97,8 +99,7 @@ pitlane_costo(3).
 pitlane_in(bucine,esterna).
 pitlane_out(san_donato,interna).
 
-% avversario(hamilton,san_donato,esterna).
-% avversario(vettel,casanova,interna).
+avversario(hamilton,san_donato,esterna).
 
 %=============================================================================== COSTI DI GARA
 

@@ -1,7 +1,7 @@
 :- multifile([type/1, pred/1, local_pred/1, open_pred/1, skipped/1, user_unit/1]).
 
-user_unit(mondo2a).
-% Un mondo con il tracciato del Mugello e 1 giro
+user_unit(mondo3d).
+% Un mondo con il tracciato del Mugello, 3 giri e 1 avversario
 
 type([
 	rettifilo,
@@ -39,7 +39,7 @@ type([interna,centrale,esterna]:traiettoria).
 %	- avversari
 % "Minima" usura massima = 5 per 1 giro
 
-giri(1).
+giri(3).
 
 sez_succ(rettifilo,san_donato).
 sez_succ(san_donato,luco).
@@ -97,8 +97,7 @@ pitlane_costo(3).
 pitlane_in(bucine,esterna).
 pitlane_out(san_donato,interna).
 
-% avversario(hamilton,san_donato,esterna).
-% avversario(vettel,casanova,interna).
+avversario(hamilton,san_donato,esterna).
 
 %=============================================================================== COSTI DI GARA
 

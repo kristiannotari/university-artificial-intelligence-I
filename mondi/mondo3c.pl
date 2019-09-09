@@ -1,7 +1,7 @@
 :- multifile([type/1, pred/1, local_pred/1, open_pred/1, skipped/1, user_unit/1]).
 
-user_unit(mondo2a).
-% Un mondo con il tracciato del Mugello e 1 giro
+user_unit(mondo3c).
+% Un mondo con il tracciato del Mugello, 1 giro e 1 avversario
 
 type([
 	rettifilo,
@@ -97,8 +97,7 @@ pitlane_costo(3).
 pitlane_in(bucine,esterna).
 pitlane_out(san_donato,interna).
 
-% avversario(hamilton,san_donato,esterna).
-% avversario(vettel,casanova,interna).
+avversario(hamilton,san_donato,esterna).
 
 %=============================================================================== COSTI DI GARA
 
