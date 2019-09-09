@@ -144,17 +144,6 @@ ultimo_giro_stato(Stato) :-
 % 	% numero di giri restanti * lunghezza giro * costo minimo traiettoria (1) + costo traiettoria attuale
 % 	C is R * L * 1 + CT.
 
-% (2) EURISTICA pitstop ancora necessari
-h(Stato,C) :-
-	giri(G), giro(N), R is G - N,
-	aggregate_all(count, sez_succ(S1,S2), L),
-	usura_massima(Qmax),
-	member(in(p(S,T)),Stato), costo(S,T,CT),
-	% numero di giri restanti * lunghezza giro * costo minimo traiettoria (1) / usura massima
-	C0 is R * L * 1,
-	C1 is div(C0, Qmax) + 1,
-	C is C1 * 4.
-
 h(_,0) :- !.
 
 %=============================================================================== PIANIFICAZIONE E START-GOAL
