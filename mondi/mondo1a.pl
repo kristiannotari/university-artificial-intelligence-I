@@ -27,29 +27,31 @@ type([
 	bucine
 ]:sezione).
 type([interna,centrale,esterna]:traiettoria).
+type([v1,v2]:velocita).
 
-%=============================================================================== MONDO DI GARA
-% Mondo di gara descritto attraverso la definizione di:
-%	- numero giri
-%	- tracciato (sez_succ)
-%	- curve
-%	- rettilinei
-%	- pitlane in e out
-%	- traiettorie
-%	- avversari
-% "Minima" usura massima = 5 per 1 giro
+%=============================================================================== DETTAGLI MACCHINA
+
+usura_massima(25).
+
+velocita(v1).
+velocita(v2).
+
+usura_massima_velocita(v1,10).
+usura_massima_velocita(v2,Qmax) :- usura_massima(Qmax).
+
+%=============================================================================== TRACCIATO
 
 giri(1).
 
 sez_succ(rettifilo,san_donato).
 sez_succ(san_donato,luco).
 sez_succ(luco,poggio_secco).
-sez_succ(poggio_secco,1).
-sez_succ(1,borgo_san_lorenzo). % riduzione
+sez_succ(poggio_secco,1). % riduzione
+% sez_succ(1,borgo_san_lorenzo).
 % sez_succ(1,materassi).
 % sez_succ(materassi,borgo_san_lorenzo).
-sez_succ(borgo_san_lorenzo,2).
-sez_succ(2,bucine). % riduzione
+% sez_succ(borgo_san_lorenzo,2).
+% sez_succ(2,bucine). 
 % sez_succ(2,casanova).
 % sez_succ(casanova,savelli).
 % sez_succ(savelli,arrabbiata1).
@@ -63,6 +65,7 @@ sez_succ(2,bucine). % riduzione
 % sez_succ(biondetti1,biondetti2).
 % sez_succ(biondetti2,5).
 % sez_succ(5,bucine).
+sez_succ(1,bucine). % riduzione
 sez_succ(bucine,rettifilo).
 
 griglia(rettifilo,esterna).
@@ -71,51 +74,45 @@ traguardo(rettifilo).
 curva(san_donato).
 curva(luco).
 curva(poggio_secco).
-curva(materassi).
-curva(borgo_san_lorenzo).
-curva(casanova).
-curva(savelli).
-curva(arrabbiata1).
-curva(arrabbiata2).
-curva(scarperia).
-curva(palagio).
-curva(correntaio).
-curva(biondetti1).
-curva(biondetti2).
+% curva(materassi).
+% curva(borgo_san_lorenzo).
+% curva(casanova).
+% curva(savelli).
+% curva(arrabbiata1).
+% curva(arrabbiata2).
+% curva(scarperia).
+% curva(palagio).
+% curva(correntaio).
+% curva(biondetti1).
+% curva(biondetti2).
 curva(bucine).
 
 rettilineo(rettifilo).
 rettilineo(1).
-rettilineo(2).
-rettilineo(3).
-rettilineo(4).
-rettilineo(5).
+% rettilineo(2).
+% rettilineo(3).
+% rettilineo(4).
+% rettilineo(5).
 
 traiettoria(interna).
 traiettoria(centrale).
 traiettoria(esterna).
 
-pitlane_costo(3).
+pitlane_costo(20).
 pitlane_in(bucine,esterna).
 pitlane_out(san_donato,interna).
 
-% avversario(hamilton,san_donato,esterna).
-% avversario(vettel,casanova,interna).
-
 %=============================================================================== COSTI DI GARA
 
-costo(rettifilo,centrale,1) :- !.
-costo(1,centrale,1) :- !.
-costo(2,esterna,1) :- !.
-costo(3,esterna,1) :- !.
-costo(4,centrale,1) :- !.
-costo(5,centrale,1) :- !.
-costo(S,T,2) :-
+costo(v1,S,centrale,2,1) :- rettilineo(S), !.
+costo(v2,S,centrale,1,2) :- rettilineo(S), !.
+costo(V,S,T,3,3) :-
+	velocita(V),
 	traiettoria(T),
-	rettilineo(S),!.
-costo(S,interna,1) :-
-	curva(S),!.
-costo(S,centrale,2) :-
-	curva(S),!.
-costo(S,esterna,3) :-
-	curva(S),!.
+	rettilineo(S), !.
+costo(v1,S,interna,2,1) :- curva(S), !.
+costo(v2,S,interna,1,2) :- curva(S), !.
+costo(v1,S,centrale,4,2) :- curva(S), !.
+costo(v2,S,centrale,3,3) :- curva(S), !.
+costo(v1,S,esterna,6,5) :- curva(S), !.
+costo(v2,S,esterna,5,7) :- curva(S), !.

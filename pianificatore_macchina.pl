@@ -14,7 +14,7 @@ user_unit(pianificatore_macchina).
 % Implementa i predicati aperti add_del di strips e h di forward_planner.
 % Contiene codice per la sperimentazione di euristiche (predicato test/3).
 
-type([in(luogo),usura(number),pitstop(number),giro(number),avversario(atom,sezione,traiettoria)]:fluent).
+type([in(luogo),usura(number),tempo(number),pitstop(number),giro(number)]:fluent).
 % i fluenti corrispondono ai predicati dinamici del mondo
 
 local_pred(add_del(action,p_node,list(fluent),list(fluent),number)).
@@ -23,52 +23,50 @@ local_pred(add_del(action,p_node,list(fluent),list(fluent),number)).
 local_pred(h(p_node,number)).
 % implementa forward_planner:h
 
-add_del(guida(p(S1,T1)),Stato,Add,Del,Costo) :-
+add_del(guida(p(S1,T1),V),Stato,Add,Del,Costo) :-
 	member(in(p(S0,T0)),Stato),
 	sez_succ(S0,S1),
-	check_usura_stato(Stato,S1,T1,Q0,Q1),
-	not(member(avversario(_,S1,T1),Stato)),
+	check_movimento_stato(Stato,V,S1,T1,QU0,QU1,QT0,QT1),
 	member(giro(G),Stato),
-	A0 = [in(p(S1,T1)),usura(Q1)],
-	D0 = [in(p(S0,T0)),usura(Q0)],
+	A0 = [in(p(S1,T1)),usura(QU1),tempo(QT1)],
+	D0 = [in(p(S0,T0)),usura(QU0),tempo(QT0)],
 	(
-		caso_speciale_guida_stato(Stato,G,p(S0,T0),A1,D1),
+		caso_speciale_guida_stato(G,p(S0,T0),A1,D1),
 		append(A0,A1,Add),
 		append(D0,D1,Del)
 		;
 		Add = A0,
 		Del = D0
 	),
-	Costo is Q1 - Q0.
+	Costo is QT1 - QT0.
 add_del(effettua_pitstop,Stato,Add,Del,Costo) :-
 	member(in(p(S0,T0)),Stato),
 	pitlane_in(S0,T0),
-	pitlane_costo(C),
+	pitlane_costo(QT),
+	member(tempo(QT0),Stato),
 	(
 		% se ho completato i giri
 		ultimo_giro_stato(Stato) ->
 		(
 			% -> termino la gara
-			Add = [in(box)],
-			Del = [in(p(S0,T0))],
-			Costo is C
+			Costo is QT / 2,
+			QT1 is QT0 + Costo,
+			Add = [in(box),tempo(QT1)],
+			Del = [in(p(S0,T0)),tempo(QT0)]
 		)
 		;
 		(
 			% ; altrimenti effettuo pitstop
 			pitlane_out(S1,T1),
-			not(member(avversario(_,S1,T1),Stato)),
-			member(usura(Q),Stato),
-			member(pitstop(P),Stato),
-			member(giro(G),Stato),
-			P1 is P + 1,
-			G1 is G + 1,
-			A0 = [usura(0),pitstop(P1),in(p(S1,T1)),giro(G1)],
-			D0 = [usura(Q),pitstop(P),in(p(S0,T0)),giro(G)],
-			sposta_avversari_stato(Stato,A1,D1),
-			append(A0,A1,Add),
-			append(D0,D1,Del),
-			Costo is C + Q * 1
+			member(usura(QU0),Stato),
+			member(pitstop(P0),Stato),
+			member(giro(G0),Stato),
+			P1 is P0 + 1,
+			G1 is G0 + 1,
+			QT1 is QT0 + QT,
+			Add = [usura(0),tempo(QT1),pitstop(P1),in(p(S1,T1)),giro(G1)],
+			Del = [usura(QU0),tempo(QT0),pitstop(P0),in(p(S0,T0)),giro(G0)],
+			Costo is QT + (QU0 * 1)
 		)
 	).
 add_del(taglia_traguardo,Stato,[in(box)],[in(p(S,T))],0) :-
@@ -78,57 +76,36 @@ add_del(taglia_traguardo,Stato,[in(box)],[in(p(S,T))],0) :-
 
 %=============================================================================== UTILS
 
-pred(check_usura_stato(p_node,sezione,traiettoria,number,number)).
-% come check_usura di mondo_macchina ma controllo usura come fluente dello stato
-check_usura_stato(Stato,S,T,Q0,Q1) :-
-	member(usura(Q0),Stato),
-	costo(S,T,Q),
-	Q1 is Q0 + Q,
+pred(check_movimento_stato(p_node,velocita,sezione,traiettoria,number,number)).
+% come check_movimento di mondo_macchina ma controllo usura come fluente dello stato
+check_movimento_stato(Stato,V,S,T,QU0,QU1,QT0,QT1) :-
+	member(usura(QU0),Stato),
+	member(tempo(QT0),Stato),
+	costo(V,S,T,QU,QT),
+	QU1 is QU0 + QU,
+	QT1 is QT0 + QT,
 	usura_massima(Qmax),
-	Q1 =< Qmax.
+	QU1 =< Qmax,
+	usura_massima_velocita(V,QmaxV),
+	QU1 =< QmaxV.
 
-pred(caso_speciale_guida_stato(p_node,number,punto,list,list)).
-% caso_speciale_guida_stato(Stato,G,P,A,D): dove G è il numero di giri attuale, P il punto
-% 	da cui la macchina si muove, A e D le liste di Add e Del
-% MODO: (+,-,-,-) semidet.
+pred(caso_speciale_guida_stato(number,punto,list,list)).
+% caso_speciale_guida_stato(G,P,A,D): dove G è il numero di giri attuale, P il punto
+% 	da cui la macchina si muove, A e D le liste di add e del
+% MODO: (+,+,-,-,-) det.
 % caso speciale guida "partenza da griglia"
-caso_speciale_guida_stato(_,0,p(S0,T0),[giro(1)],[giro(0)]) :-
+caso_speciale_guida_stato(0,p(S0,T0),[giro(1)],[giro(0)]) :-
 	griglia(S0,T0).
 % caso speciale guida "taglio del traguardo per nuovo giro"
-caso_speciale_guida_stato(Stato,G,p(S0,_),[giro(G1)|A],[giro(G)|D]) :-
+caso_speciale_guida_stato(G0,p(S0,_),[giro(G1)],[giro(G0)]) :-
+	G0 =\= 0,
 	traguardo(S0),
-	sposta_avversari_stato(Stato,A,D),
-	G1 is G + 1.
-
-pred(sposta_avversari_stato(p_node,list,list)).
-% sposta_avversari(Stato,A,D): sposta tutti gli avversari (evitando di farli
-% 	andare su dove è adesso la macchina o altri avversari) e dà in output la
-%	lista degli avversari con le nuove (A) e vecchie (D) posizioni.
-% MODO: (+,-,-) semidet.
-sposta_avversari_stato(Stato,A,D) :-
-	not(member(avversario(_,_,_),Stato)) ->
-		A = [],
-		D = []
-	;
-		setof(avversario(Nome,S,T),member(avversario(Nome,S,T),Stato),D),
-		maplist(sposta_avversario_stato(Stato),D,A).
-
-sposta_avversario_stato(Stato,avversario(Nome,S0,_),avversario(Nome,S1,T)) :-
-	sez_succ(S0,S1),
-	setof(
-		(Costo,T1),
-		T1^(
-			costo(S1,T1,Costo),
-			not(member(in(p(S1,T1)),Stato)),
-			not(member(avversario(_,S1,T1),Stato))
-		),
-		[(_,T)|_]
-	).
+	G1 is G0 + 1.
 	
 pred(ultimo_giro_stato(p_node)).
 % ultimo_giro(Stato): verifica che sia l'ultimo giro (numero di giri attuale = 
 %	numero di giri da effettuare)
-% MODO: semidet.
+% MODO: det.
 ultimo_giro_stato(Stato) :-
 	member(giro(G),Stato),
 	giri(N),
@@ -164,29 +141,22 @@ pred(piano(decisione_complessa,list(action),number)).
 % MODO (++,--,--) nondet
 
 stato_iniziale(Stato) :-
-	(
-		not(avversario(_,_,_)) ->
-		ListaAvversari = [];
-		setof(avversario(Nome,S,T),avversario(Nome,S,T),ListaAvversari)
-	),
-
 	in(L),
-	usura(Q),
+	usura(QU),
+	tempo(QT),
 	giro(G),
 	pitstop(P),
-	maplist(write, ["\n\nSTATO INIZIALE: ", "in=", L, ", usura=", Q, ", giro=", G, ", pitstop=", P, "\nAVVERSARI: "]),	
-	writeln(ListaAvversari),
-	list_to_ord_set([in(L),usura(Q),giro(G),pitstop(P)|ListaAvversari],Stato).
+	maplist(write, ["\n\nSTATO INIZIALE: ", "in=", L, ", usura=", QU, ", tempo=", QT, ", giro=", G, ", pitstop=", P]),
+	list_to_ord_set([in(L),usura(QU),tempo(QT),giro(G),pitstop(P)],Stato).
 
 stato_goal(Stato) :-
 	member(in(box),Stato),
-	member(usura(Q),Stato),
+	member(usura(QU),Stato),
 	usura_massima(Qmax),
-	Q =< Qmax,
+	QU =< Qmax,
 	member(giro(G),Stato),
 	giri(N),
 	G =:= N,
-
 	maplist(write, ["STATO FINALE: ", Stato]).
 
 % Uso i predicati stato_iniziale/2 e stato_goal/1 per passare stato iniziale e
