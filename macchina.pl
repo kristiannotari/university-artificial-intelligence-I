@@ -18,19 +18,9 @@ macchina_help :- maplist(writeln,
  ' nodebugtrace per escluderla,  debugtrace per riattivarla\n']).
 
 user_unit(macchina).
-%  unità che governa la "vita" della macchina usando
+% Unità che governa la "vita" della macchina usando
 %  l'RRS decisore  (in 'rrs/decisore.pl').
 %  Usa (importa) i tipi e i predicati definiti in mondo_macchina
-%
-% import_type(mondo_macchina:action).
-%    action, le azioni del mondo macchina+circuito da pulire
-% import_type(mondo_macchina:luogo).
-%    i luoghi, stanze e balcone
-% import_pred(mondo_macchina:sporco(luogo,number)).
-%    lo sporco nei  luaoghi
-% import_pred(mondo_aspirapolvere:esecuzione(action)).
-%     il mondo delle stanze da puire ed esecuzione
-%     effettiva delle azioni dell'agente nel mondo
 %
 % Usa il predicato
 %   piano(decisione_complessa, list(action), number)).
@@ -130,7 +120,7 @@ do_action(Azione,S1,S2) :-
 	esecuzione(Azione).
 transizione(schierati,ferma,in_gara).
 transizione(taglia_traguardo,in_gara,ferma).
-transizione(guida(_),in_gara,in_gara).
+transizione(guida(_,_),in_gara,in_gara).
 transizione(effettua_pitstop,in_gara,in_gara).
 
 
