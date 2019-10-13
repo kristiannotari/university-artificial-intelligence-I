@@ -27,6 +27,7 @@ add_del(guida(p(S1,T1),V),Stato,Add,Del,Costo) :-
 	member(in(p(S0,T0)),Stato),
 	sez_succ(S0,S1),
 	check_movimento_stato(Stato,V,S1,T1,QU0,QU1,QT0,QT1),
+	check_avversario_stato(Stato,S1,T1),
 	member(giro(G),Stato),
 	A0 = [in(p(S1,T1)),usura(QU1),tempo(QT1)],
 	D0 = [in(p(S0,T0)),usura(QU0),tempo(QT0)],
@@ -76,6 +77,13 @@ add_del(taglia_traguardo,Stato,[in(box)],[in(p(S,T))],0) :-
 
 %=============================================================================== UTILS
 
+pred(check_avversario_stato(p_node,sezione,traiettoria)).
+% verifica se è possibile guidare nel punto p(S,T) in base alla conoscenza post interruzione
+% degli avversari nel circuito.
+check_avversario_stato(Stato,S,T) :-
+	member(giro(G),Stato),
+	not(sa_avversario(G,p(S,T))).
+
 pred(check_movimento_stato(p_node,velocita,sezione,traiettoria,number,number)).
 % come check_movimento di mondo_macchina ma controllo usura come fluente dello stato
 check_movimento_stato(Stato,V,S,T,QU0,QU1,QT0,QT1) :-
@@ -114,12 +122,12 @@ ultimo_giro_stato(Stato) :-
 %=============================================================================== EURISTICHE
 
 % (1) EURISTICA distanza ancora da percorrere (in costo)
-% h(Stato,C) :-
-% 	giri(G), giro(N), R is G - N,
-% 	aggregate_all(count, sez_succ(S1,S2), L),
-% 	member(in(p(S,T)),Stato), costo(S,T,CT),
-% 	% numero di giri restanti * lunghezza giro * costo minimo traiettoria (1) + costo traiettoria attuale
-% 	C is R * L * 1 + CT.
+h(Stato,C) :-
+	giri(G), giro(N), R is G - N,
+	aggregate_all(count, sez_succ(_,_), L),
+	member(in(p(S,T)),Stato), costo(v1,S,T,_,QT),
+	% numero di giri restanti * lunghezza giro * costo minimo traiettoria (1) + costo (tempo) minimo per questa sezione del circuito
+	C is R * L * 1 + QT.
 
 h(_,0) :- !.
 

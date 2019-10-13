@@ -11,17 +11,17 @@ Relazione per il progetto di Intelligenza Artificiale I
 
 ## Obiettivo
 
-Il progetto consiste nell'implementazione di un agente con conoscenza incompleta, che gestisca e pianifichi il ciclo di vita di una macchina da corsa all'interno di un circuito con avversari (altre macchine).
+Il progetto consiste nell'implementazione di un agente con conoscenza incompleta, che gestisca e pianifichi il ciclo di vita di una macchina da corsa all'interno di un circuito.
 
 ## Modalità e vincoli
 
-La macchina ha un'usura (generica) massima che può "sopportare", mentre gli avversari no. Il suo scopo è completare n giri di un circuito, dalla griglia di partenza al traguardo. 
+La macchina ha un'usura (generica) massima che può "sopportare", e diverse velocità a cui può andare. Il suo scopo è completare n giri di un circuito, dalla griglia di partenza al traguardo.
 
 Vi è un circuito composto da una serie di sezioni (S), ognuna delle quali può avere n traiettorie (T). Il circuito è una lista ordinata di sezioni. E' poi caratterizzata la possibilità di effettuare pitstop, in modo da far tornare l'usura a 0. E' anche possibile tagliare il traguardo tornando ai box nel corso dell'ultimo giro. La sosta ai box ha un costo fisso determinato dal circuito più un costo proporzionale all'usura da "ripristinare".
 
-Ad ogni spostamento di punto in punto (punto = coppia sezione-traiettoria), il circuito fornisce il costo in usura necessario a quello spostamento.
+Ad ogni spostamento di punto in punto (punto = coppia sezione-traiettoria), il circuito fornisce il costo in usura necessario a quello spostamento e in termini di tempo.
 
-Anche gli avversari si spostano ma solo al termine di ogni giro, nella sezione successiva a quella dove si trovavano (per far si di non dover gestire diverse velocità per ogni macchina presente nel circuito ma permettere comunque scenari di sorpassi da effettuare). Non è possibile spostare la macchina in un punto occupato da un avversario (ne un avversario spostarsi in un punto occupato da un altro avversario).
+A seconda della velocità scelta per spostarsi da un punto all'altro cambia l'usura necessaria e il tempo impiegato. Vi è inoltre un livello massimo di usura oltre il quale non si possono usare le velocità "migliori".
 
 ## Organizzazione codice
 
@@ -33,12 +33,15 @@ Vi sono 3 file chiave:
 
 ### Mondo macchina
 
-Il mondo macchina gestisce le regole, i vincoli e le azioni che sono vigenti o che possono essere effettuate all'interno di un mondo selezionato (caricato). Definisce anche l'usura massima della macchina. I mondi possibili si trovano nella cartella "mondi" e ve ne sono già presenti 4.
+Il mondo macchina gestisce le regole, i vincoli e le azioni che sono vigenti o che possono essere effettuate all'interno di un mondo selezionato (caricato). I mondi possibili si trovano nella cartella "mondi".
 
 #### Mondi
 
-Ogni mondo gestisce i parametri del circuito:
+Ogni mondo gestisce i parametri del circuito e della macchina:
 
+- usura massima
+- velocità
+- vincoli velocità/usura
 - composizione
 - sezioni
 - traiettorie
@@ -48,12 +51,11 @@ Ogni mondo gestisce i parametri del circuito:
 - costo per gli spostamenti in un determinato punto
 - numero e posizione degli avversari
 
-Insieme al codice vi sono 4 mondi (su cui sono stati effettuati anche i test per le euristiche):
+Insieme al codice vi sono 3 mondi (su cui sono stati effettuati anche i test per le euristiche):
 
 - mondo 1a (circuito del mugello, ridotto, 1 giro)
 - mondo 1b (circuito del mugello, ridotto, 3 giri)
 - mondo 2a (circuito del mugello, 1 giro)
-- mondo 2b (circuito del mugello, 3 giri)
 
 #### Predicati dinamici
 
@@ -61,22 +63,22 @@ I cambiamenti nel mondo, a seguito delle azioni possono essere:
 
 - `in(luogo)` ovvero la posizione attuale della macchina (luogo = {box,punto(S,T)})
 - `usura(number)` ovvero l'usura attuale della macchina
+- `tempo(number)` ovvero il tempo impiegato dalla macchina nella gara
 - `pitstop(number)` ovvero il numero di pitstop effettuati dalla macchina
 - `giro(number)` ovvero il numero di giri già percorsi dalla macchina
-- `avversario(atom,sezione,traiettoria)` ovvero l'enumerazione degli avversari (indicati con un atom, ad esempio "hamilton") e la loro posizione nel circuito
 
 #### Azioni
 
 La macchina può effettuare solo determinate azioni qui specificate:
 
 - `schierati` che mette a default i predicati dinamici del mondo e muove la macchina dai box alla griglia di partenza
-- `guida(p(sezione,traiettoria))` che muove la macchina dalla posizione attuale al punto specificato se possibile
+- `guida(velocità,p(sezione,traiettoria))` che muove la macchina dalla posizione attuale al punto specificato con la velocità specificata
 - `effettua_pitstop` che permette alla macchina di fermarsi ai box per ripristinare 'usura, se attualmente la macchina si trova nel punto di pitlane_in (ovvero ingresso in pitlane) e che termina anche la gara tagliando il traguardo se dovesse essere l'ultimo giro
 - `taglia_traguardo` che permette di tagliare il traguardo e terminare la corsa, riportando la macchina ai box
 
 Le azioni come `guida` e `effettua_pitstop` contengono sottocasi in base alle reali condizioni della gara.
 
-Lo spostamento degli avversari avviene ogni quando la macchina taglia il traguardo (completa un giro, che sia da circuito o dai box) con un ~10% di probabilità che gli avversari non scelgano il proprio punto successivo in modo ottimale (quello dal costo spostamento minore, a meno di occupazioni del punto da parte di un altro avversario o della macchina).
+Vi è un ~10% di probabilità che ad uno spostamento della macchina corrisponda un punto "occupato da un avversario", per simulare eventuali sorpassi. In quel caso la macchina deve ripianificare tenendo conto della posizione occupata.
 
 #### Animazioni
 
@@ -100,8 +102,6 @@ L'implementazione del predicato add_del è chiusa a 3 casi:
 
 che sono le 3 azioni possibili in fase di pianificazione, anche se internamente nascondono più sottocasi, in base alle pianificate condizioni della gara in quel dato momento.
 
-Lo spostamento degli avversari viene pianificato essere quello (per loro) a minor costo di spostamento, sempre (a meno di occupazione del punto da parte di altri avversari).
-
 #### Stati iniziale e finale
 
 Quindi lo stato iniziale permette di "riprendere" la corsa da qualsiasi punto si voglia, non per forza dalla griglia di partenza, andando così a poter pianificare qualsiasi strategia che termini con lo stato finale.
@@ -112,7 +112,7 @@ Lo stato finale definisce le condizioni di fine gara che sono:
 - usura attuale macchina <= usura massima macchina
 - i giri effettuati sono uguali ai giri richiesti dal circuito (mondo caricato)
 
-e non serve altro poichè le azioni disponibili pianificabili attravero gli add_del fanno si che di stato in stato si rimanga all'interno di stati ammissibili (rispetto ai vincoli del mondo macchina e rispetto ai vincoli dello stato finale).
+e non serve altro poichè le azioni disponibili pianificabili attraverso gli add_del fanno si che di stato in stato si rimanga all'interno di stati ammissibili (rispetto ai vincoli del mondo macchina e rispetto ai vincoli dello stato finale).
 
 #### Euristiche
 
@@ -135,8 +135,7 @@ Gli stati possibili in cui può trovarsi l'agente macchina sono:
 
 Le interruzioni possono essere:
 
-- `punto_occupato_macchina` ovvero interruzione dovuta al fatto che la macchina non può muoversi nel punto pianificato in quanto si trova un avversario nella stessa posizione
-- `punto_occupato_avversario` ovvero interruzione dovuta al fatto che un avversario non può muoversi nel punto scelto dal mondo macchina reale in quanto si trova un avversario o la macchina nella stessa posizione
+- `punto_occupato` ovvero interruzione dovuta al fatto che la macchina non può muoversi nel punto pianificato in quanto si trova un avversario nella stessa posizione
 
 #### Decisioni
 
@@ -148,8 +147,7 @@ Durante l'esecuzione delle azioni pianificate è possibile che capitino delle in
 
 Altrimenti è un'interruzione conosciuta che può essere gestita:
 
-- `punto_occupato_macchina` la pianificazione viene rieseguita ottenendo come informazioni iniziali le posizioni reali degli avversari, in modo da ripianificare una serie di azioni per completare la gara
-- `punto_occupato_avversario` si "simula" un'incidente per cui l'avversario che si sta muovendo in un punto occupato viene rimosso dalla gara in quanto incidentato
+- `punto_occupato` la pianificazione viene rieseguita ottenendo come informazioni iniziali la posizione reale dell'avversario, in modo da ripianificare una serie di azioni per completare la gara
 
 ## Manuale d'uso
 

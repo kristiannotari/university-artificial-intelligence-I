@@ -141,9 +141,16 @@ esecuzione(guida(p(S1,T1),V)) :-
 		append(R0,R1,R),
 		append(A0,A1,A)
 		;
-		R = R0,
-		A = A0,
-		C = spostato(p(S0,T0),V)
+		(
+			maybe(0.1),
+			writeln("PUNTO OCCUPATOOOOOOOOO"),
+			throw(punto_occupato_macchina(G,p(S1,T1))) %--------------------------- throw punto occupato
+			;
+			writeln("PUNTO LIBERO"),
+			R = R0,
+			A = A0,
+			C = spostato(p(S0,T0),V)
+		)
 	),
 	change(R,A,C).
 esecuzione(effettua_pitstop) :-

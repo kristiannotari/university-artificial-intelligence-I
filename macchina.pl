@@ -31,12 +31,10 @@ start :- decisore(ferma).
 
 %===============================================================================  STATI INTERNI E INTERRUZIONI MACCHINA
 
-type([punto_occupato_macchina(atom,punto),punto_occupato_avversario(atom)]:interrupt_expl).
+type([punto_occupato(number,punto)]:interrupt_expl).
 % Chiudo interrupt_expl; vi sono:
-%	- punto_occupato_macchina(Nome,p(S,T)): interruzione quando la macchina non
-%	può spostarsi nel punto S,T indicato a causa dell'avversario Nome
-%	- punto_occupato_avversario(Nome): l'avversario Nome non ha un punto
-%	disponibile in cui muoversi
+%	- punto_occupato(G,p(S,T)): interruzione quando la macchina non
+%	può spostarsi nel punto S,T indicato a causa della presenza di un avversario al giro G
 type([ferma,in_gara,interruzione(interrupt_expl),unknown(interrupt)]:state).
 % Chiudo il tipo state; la macchina attende di essere fatta partire in stato
 % ferma e procede nel circuito nello stato in_gara.
@@ -80,11 +78,9 @@ pred(stato_interruzione(interrupt, state)).
 decidi(ferma, do([schierati])) :-
        event(avvio_gara).
 decidi(in_gara, gareggia).
-decidi(interruzione(punto_occupato_macchina(Nome,p(S,T))), gareggia) :-
-	maplist(write, ["\n\nMacchina non può andare nel punto(", S, ",", T, ") poichè è presente un avversario (", Nome, ")"]).
-decidi(interruzione(punto_occupato_avversario(Nome)), gareggia) :-
-	retractall(avversario(Nome,_,_)),
-	maplist(write, ["\n\nAvversario (", Nome, ") non ha punti liberi in cui muoversi, incidente!"]).
+decidi(interruzione(punto_occupato(G,p(S,T))), gareggia) :-
+	impara(G,p(S,T)),
+	maplist(write, ["\n\nMacchina non può andare nel punto(", S, ",", T, ") poichè è presente un avversario al giro ", G]).
 decidi(UNKNOWN,_) :-
 	%  Per le interruzioni non previste abortisce
 	writeln('\n\nInterruzione non prevista':UNKNOWN), abort.
@@ -104,8 +100,7 @@ stato_interruzione(Interr, StatoInterr) :- !,
 
 local_pred(is_interrupt_expl(interrupt_expl)).
 % serve per filtrare le interrupt_expl previste
-is_interrupt_expl(punto_occupato_macchina(_,p(_,_))).
-is_interrupt_expl(punto_occupato_avversario(_)).
+is_interrupt_expl(punto_occupato(p(_,_))).
 
 tratta_decisione_impossibile(_,_,_) :-
 	writeln('\n\nQuacosa non va, non sono previste decisioni impossibili'),
