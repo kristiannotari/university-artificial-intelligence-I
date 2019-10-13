@@ -100,7 +100,7 @@ stato_interruzione(Interr, StatoInterr) :- !,
 
 local_pred(is_interrupt_expl(interrupt_expl)).
 % serve per filtrare le interrupt_expl previste
-is_interrupt_expl(punto_occupato(p(_,_))).
+is_interrupt_expl(punto_occupato(_,_)).
 
 tratta_decisione_impossibile(_,_,_) :-
 	writeln('\n\nQuacosa non va, non sono previste decisioni impossibili'),

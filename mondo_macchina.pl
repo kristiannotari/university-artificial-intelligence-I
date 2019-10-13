@@ -144,7 +144,7 @@ esecuzione(guida(p(S1,T1),V)) :-
 		(
 			maybe(0.1),
 			writeln("PUNTO OCCUPATOOOOOOOOO"),
-			throw(punto_occupato_macchina(G,p(S1,T1))) %--------------------------- throw punto occupato
+			throw(punto_occupato(G,p(S1,T1))) %--------------------------- throw punto occupato
 			;
 			writeln("PUNTO LIBERO"),
 			R = R0,
