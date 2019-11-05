@@ -67,11 +67,11 @@ pred(usura(number)).
 pred(tempo(number)).
 % tempo(QT): QT quantità di tempo usato
 % MODO (?) semidet.
-:- dynamic(usura/1).
+:- dynamic(tempo/1).
 pred(pitstop(number)).
 % pitstop(N): N numero di pitstop effettuati
 % MODO (?) semidet.
-:- dynamic(usura/1).
+:- dynamic(pitstop/1).
 pred(giro(number)).
 % giro(N): N numero del giro in corso
 % MODO (?) semidet.
@@ -117,6 +117,9 @@ clear_db :-
 	retractall(giro(_)),
 	nb_setval(step,0),
 	assert(in(box)),
+	aggregate_all(count, sez_succ(_,_), L),
+	retractall(lunghezza_giro(_)),
+	assert(lunghezza_giro(L)),
 	consult(mondi/mondo1a). % --------------------------------------------------- caricamento del mondo scelto
 :- clear_db.
 

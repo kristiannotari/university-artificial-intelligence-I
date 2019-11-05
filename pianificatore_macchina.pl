@@ -14,8 +14,8 @@ user_unit(pianificatore_macchina).
 % Implementa i predicati aperti add_del di strips e h di forward_planner.
 % Contiene codice per la sperimentazione di euristiche (predicato test/3).
 
-type([in(luogo),usura(number),tempo(number),pitstop(number),giro(number)]:fluent).
-% i fluenti corrispondono ai predicati dinamici del mondo
+type([in(luogo),usura(number),pitstop(number),giro(number)]:fluent).
+% i fluenti corrispondono ai predicati dinamici del mondo (tranne il tempo che è la quantità da ottimizzare)
 
 local_pred(add_del(action,p_node,list(fluent),list(fluent),number)).
 % implementa strips:add_del
@@ -29,8 +29,9 @@ add_del(guida(p(S1,T1),V),Stato,Add,Del,Costo) :-
 	check_movimento_stato(Stato,V,S1,T1,QU0,QU1,QT0,QT1),
 	check_avversario_stato(Stato,S1,T1),
 	member(giro(G),Stato),
-	A0 = [in(p(S1,T1)),usura(QU1),tempo(QT1)],
-	D0 = [in(p(S0,T0)),usura(QU0),tempo(QT0)],
+	raggiungo_pitstop_usura(S1,QU1),
+	A0 = [in(p(S1,T1)),usura(QU1)],
+	D0 = [in(p(S0,T0)),usura(QU0)],
 	(
 		caso_speciale_guida_stato(G,p(S0,T0),A1,D1),
 		append(A0,A1,Add),
@@ -119,13 +120,38 @@ ultimo_giro_stato(Stato) :-
 	giri(N),
 	G =:= N.
 
+raggiungo_pitstop_usura(S,T,QU) :-
+	pitlane_in(S,T)
+	;
+	sez_succ(S,S1),
+	findall(QU0,costo(v2,S1,_,QU0,_),Costi),
+	min_list(Costi,QU0min),
+	QU >= QU0min,
+	QU1 is QU + QU0min,
+	usura_massima(QUmax),
+	QU1 <= QUmax,
+	raggiungo_pitstop_usura(S1,T,QU1).
+
 %=============================================================================== EURISTICHE
+
+costo_superamento_traguardo_(S,_,C,QT) :-
+	traguardo(S),
+	QT is C + 0.
+costo_superamento_traguardo_(S,T,C,QT) :-
+	sez_succ(S,S1),
+	costo_superamento_traguardo_(S1,C,C1),
+	findall(QT0,costo(v1,S,_,_,QT0),Costi),
+	min_list(Costi,QT0min),
+	QT is C + C1 + QT0min.
+costo_superamento_traguardo(Stato,Costo) :-
+	member(in(p(S,T)),Stato),
+	costo_superamento_traguardo_(S,T,0,Costo).
 
 % (1) EURISTICA distanza ancora da percorrere (in costo)
 h(Stato,C) :-
-	giri(G), giro(N), R is G - N,
-	aggregate_all(count, sez_succ(_,_), L),
-	member(in(p(S,T)),Stato), costo(v1,S,T,_,QT),
+	giri(G), member(giro(N), Stato), R is G - N,
+	lunghezza_giro(L),
+	costo_superamento_traguardo(Stato, QT),
 	% numero di giri restanti * lunghezza giro * costo minimo traiettoria (1) + costo (tempo) minimo per questa sezione del circuito
 	C is R * L * 1 + QT.
 
