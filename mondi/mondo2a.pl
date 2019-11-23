@@ -36,7 +36,7 @@ usura_massima(50).
 velocita(v1).
 velocita(v2).
 
-usura_massima_velocita(v1,0).
+usura_massima_velocita(v1,20).
 usura_massima_velocita(v2,Qmax) :- usura_massima(Qmax).
 
 %=============================================================================== TRACCIATO

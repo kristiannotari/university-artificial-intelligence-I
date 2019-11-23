@@ -41,7 +41,7 @@ usura_massima_velocita(v2,Qmax) :- usura_massima(Qmax).
 
 %=============================================================================== TRACCIATO
 
-giri(3).
+giri(50).
 
 sez_succ(rettifilo,san_donato).
 sez_succ(san_donato,luco).

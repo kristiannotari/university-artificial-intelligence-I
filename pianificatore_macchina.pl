@@ -158,7 +158,7 @@ h(Stato,C) :-
 	% member(in(p(S,_)),Stato),
 	% maplist(write, ["\nEURISTICA: ", "giro=", N, " rimanenti=", R, ", sezione=", S, ", lg=", L, ", costo=", QT]),
 	% numero di giri restanti * lunghezza giro * costo minimo traiettoria (1) + costo (tempo) minimo per questa sezione del circuito
-	C is 1 * R * L * 1 + 1 * QT.
+	C is 4 * R * L * 1 + 4 * QT.
 
 h(_,0) :- !.
 
