@@ -1,6 +1,7 @@
 :- consult('rrs/forward_planner').
 :- consult('rrs/strips').
 :- consult(mondo_macchina).
+:- consult(conoscenza_macchina).
 :- multifile([type/1, pred/1, local_pred/1, open_pred/1, skipped/1, user_unit/1]).
 
 user_unit(pianificatore_macchina).
@@ -119,9 +120,11 @@ ultimo_giro_stato(Stato) :-
 	member(giro(G),Stato),
 	giri(N),
 	G =:= N.
-
-raggiungo_pitstop_usura(S,T,QU) :-
-	pitlane_in(S,T)
+% raggiungo_pitstop_usura(S,QU): verifica che con l'usura attuale QU e dalla sezione S si possa raggiungere
+% 	l'ingresso dei pitstop (per tagliare rami in cui questo non è possibile)
+% MODO: det.
+raggiungo_pitstop_usura(S,QU) :-
+	pitlane_in(S,_)
 	;
 	sez_succ(S,S1),
 	findall(QU0,costo(v2,S1,_,QU0,_),Costi),
@@ -129,31 +132,33 @@ raggiungo_pitstop_usura(S,T,QU) :-
 	QU >= QU0min,
 	QU1 is QU + QU0min,
 	usura_massima(QUmax),
-	QU1 <= QUmax,
-	raggiungo_pitstop_usura(S1,T,QU1).
+	QU1 =< QUmax,
+	raggiungo_pitstop_usura(S1,QU1).
 
 %=============================================================================== EURISTICHE
 
-costo_superamento_traguardo_(S,_,C,QT) :-
+costo_superamento_traguardo_(S,C,QT) :-
 	traguardo(S),
 	QT is C + 0.
-costo_superamento_traguardo_(S,T,C,QT) :-
+costo_superamento_traguardo_(S,C,QT) :-
 	sez_succ(S,S1),
 	costo_superamento_traguardo_(S1,C,C1),
 	findall(QT0,costo(v1,S,_,_,QT0),Costi),
 	min_list(Costi,QT0min),
 	QT is C + C1 + QT0min.
 costo_superamento_traguardo(Stato,Costo) :-
-	member(in(p(S,T)),Stato),
-	costo_superamento_traguardo_(S,T,0,Costo).
+	member(in(p(S,_)),Stato),
+	costo_superamento_traguardo_(S,0,Costo).
 
 % (1) EURISTICA distanza ancora da percorrere (in costo)
 h(Stato,C) :-
 	giri(G), member(giro(N), Stato), R is G - N,
 	lunghezza_giro(L),
 	costo_superamento_traguardo(Stato, QT),
+	% member(in(p(S,_)),Stato),
+	% maplist(write, ["\nEURISTICA: ", "giro=", N, " rimanenti=", R, ", sezione=", S, ", lg=", L, ", costo=", QT]),
 	% numero di giri restanti * lunghezza giro * costo minimo traiettoria (1) + costo (tempo) minimo per questa sezione del circuito
-	C is R * L * 1 + QT.
+	C is 1 * R * L * 1 + 1 * QT.
 
 h(_,0) :- !.
 
@@ -191,7 +196,7 @@ stato_goal(Stato) :-
 	member(giro(G),Stato),
 	giri(N),
 	G =:= N,
-	maplist(write, ["STATO FINALE: ", Stato]).
+	maplist(write, ["\nSTATO FINALE: ", Stato]).
 
 % Uso i predicati stato_iniziale/2 e stato_goal/1 per passare stato iniziale e
 % stato goal al planner

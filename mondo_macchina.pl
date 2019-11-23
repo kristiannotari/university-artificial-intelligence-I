@@ -110,6 +110,7 @@ skipped(nb_setval/2).
 skipped(nb_getval/2).
 
 clear_db :-
+	consult(mondi/mondo1a), % --------------------------------------------------- caricamento del mondo scelto
 	retractall(in(_)),
 	retractall(usura(_)),
 	retractall(tempo(_)),
@@ -119,8 +120,7 @@ clear_db :-
 	assert(in(box)),
 	aggregate_all(count, sez_succ(_,_), L),
 	retractall(lunghezza_giro(_)),
-	assert(lunghezza_giro(L)),
-	consult(mondi/mondo1a). % --------------------------------------------------- caricamento del mondo scelto
+	assert(lunghezza_giro(L)).
 :- clear_db.
 
 esecuzione(schierati) :-
