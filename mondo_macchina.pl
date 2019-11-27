@@ -110,7 +110,7 @@ skipped(nb_setval/2).
 skipped(nb_getval/2).
 
 clear_db :-
-	consult(mondi/mondo2b), % --------------------------------------------------- caricamento del mondo scelto
+	consult(mondi/mondo1b), % --------------------------------------------------- caricamento del mondo scelto
 	retractall(in(_)),
 	retractall(usura(_)),
 	retractall(tempo(_)),
@@ -146,7 +146,7 @@ esecuzione(guida(p(S1,T1),V)) :-
 		;
 		(
 			maybe(0.1),
-			writeln("PUNTO OCCUPATOOOOOOOOO"),
+			writeln("PUNTO OCCUPATO"),
 			throw(punto_occupato(G,p(S1,T1))) %--------------------------- throw punto occupato
 			;
 			writeln("PUNTO LIBERO"),

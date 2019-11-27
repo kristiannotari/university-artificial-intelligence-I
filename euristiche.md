@@ -21,7 +21,9 @@
 
 ### Obiettivo
 
-Calcolo la distanza (in costo) ancora da percorrere per arrivare al traguardo con la seguente formula: `numero di giri rimanenti * lunghezza giro * costo minimo traiettoria + costo minimo dalla sezione in cui mi trovo fino alla fine del giro corrente` dove la lunghezza del giro è data dal conteggio delle sezioni presenti nel circuito.
+Calcolo la distanza (in costo) ancora da percorrere per arrivare al traguardo con la seguente formula: `numero di giri rimanenti * lunghezza giro * costo minimo traiettoria + costo minimo dalla sezione in cui mi trovo fino alla fine del giro corrente` dove la lunghezza del giro è data dal conteggio delle sezioni presenti nel circuito ed entrambi gli addendi sono pesati con dei pesi W1 e W2.
+
+L'euristica è sovrastimata e come si può vedere nel confronto tra le due seguenti tabelle, aumentare la sovrastima con pesi W1=4 e W2=4 (che portano a prestazioni migliori) comportano un risultato non ottimale per il mondo 1b, che ha la peculiarità di essere un mondo con 3 giri in un circuito breve.
 
 ### Risultati pesi 1, 1
 

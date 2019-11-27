@@ -149,18 +149,27 @@ costo_superamento_traguardo_(S,C,QT) :-
 costo_superamento_traguardo(Stato,Costo) :-
 	member(in(p(S,_)),Stato),
 	costo_superamento_traguardo_(S,0,Costo).
+costo_superamento_traguardo(Stato,Costo) :-
+	member(in(box),Stato),
+	Costo is 0.
 
 % (1) EURISTICA distanza ancora da percorrere (in costo)
-h(Stato,C) :-
+pesata(W1,W2,Stato,C) :-
 	giri(G), member(giro(N), Stato), R is G - N,
 	lunghezza_giro(L),
 	costo_superamento_traguardo(Stato, QT),
 	% member(in(p(S,_)),Stato),
 	% maplist(write, ["\nEURISTICA: ", "giro=", N, " rimanenti=", R, ", sezione=", S, ", lg=", L, ", costo=", QT]),
 	% numero di giri restanti * lunghezza giro * costo minimo traiettoria (1) + costo (tempo) minimo per questa sezione del circuito
-	C is 4 * R * L * 1 + 4 * QT.
+	C is W1 * R * L * 1 + W2 * QT.
 
-h(_,0) :- !.
+% (0) EURISTICA zero
+zero(_,0) :- !.
+
+% Esecuzione euristica definita
+h(Stato, C) :-
+	nb_getval(euristica, E),
+	call(E, Stato, C).
 
 %=============================================================================== PIANIFICAZIONE E START-GOAL
 
@@ -201,6 +210,9 @@ stato_goal(Stato) :-
 % Uso i predicati stato_iniziale/2 e stato_goal/1 per passare stato iniziale e
 % stato goal al planner
 piano(gareggia,Plan,Cost) :-
+	% scelta euristica
+	nb_setval(euristica, zero),
+	% nb_setval(euristica, pesata(4,4)),
 	plan(stato_iniziale,
 	     stato_goal,
 			     [_Sin|_Path],
