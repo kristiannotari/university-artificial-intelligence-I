@@ -102,15 +102,15 @@ pitlane_out(san_donato,interna).
 
 %=============================================================================== COSTI DI GARA
 
-costo(v1,S,centrale,2,1) :- rettilineo(S).
 costo(v1,S,interna,3,3) :-rettilineo(S).
+costo(v1,S,centrale,2,1) :- rettilineo(S).
 costo(v1,S,esterna,3,3) :-rettilineo(S).
 costo(v1,S,interna,2,1) :- curva(S).
 costo(v1,S,centrale,4,2) :- curva(S).
 costo(v1,S,esterna,6,5) :- curva(S).
 
-costo(v2,S,centrale,1,2) :- rettilineo(S).
 costo(v2,S,interna,2,4) :-rettilineo(S).
+costo(v2,S,centrale,1,2) :- rettilineo(S).
 costo(v2,S,esterna,2,4) :-rettilineo(S).
 costo(v2,S,interna,1,2) :- curva(S).
 costo(v2,S,centrale,3,3) :- curva(S).

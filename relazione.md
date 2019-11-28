@@ -49,13 +49,15 @@ Ogni mondo gestisce i parametri del circuito e della macchina:
 - ingresso e uscita pitlane
 - costo fisso del pitstop
 - costo per gli spostamenti in un determinato punto
-- numero e posizione degli avversari
 
 Insieme al codice vi sono 3 mondi (su cui sono stati effettuati anche i test per le euristiche):
 
 - mondo 1a (circuito del mugello, ridotto, 1 giro)
 - mondo 1b (circuito del mugello, ridotto, 3 giri)
 - mondo 2a (circuito del mugello, 1 giro)
+- mondo 2b (circuito del mugello, 3 giri)
+- mondo 2c (circuito del mugello, 10 giro)
+- mondo 2d (circuito del mugello, 50 giri)
 
 #### Predicati dinamici
 
@@ -72,7 +74,7 @@ I cambiamenti nel mondo, a seguito delle azioni possono essere:
 La macchina può effettuare solo determinate azioni qui specificate:
 
 - `schierati` che mette a default i predicati dinamici del mondo e muove la macchina dai box alla griglia di partenza
-- `guida(velocità,p(sezione,traiettoria))` che muove la macchina dalla posizione attuale al punto specificato con la velocità specificata
+- `guida(p(sezione,traiettoria),velocità)` che muove la macchina dalla posizione attuale al punto specificato con la velocità specificata
 - `effettua_pitstop` che permette alla macchina di fermarsi ai box per ripristinare 'usura, se attualmente la macchina si trova nel punto di pitlane_in (ovvero ingresso in pitlane) e che termina anche la gara tagliando il traguardo se dovesse essere l'ultimo giro
 - `taglia_traguardo` che permette di tagliare il traguardo e terminare la corsa, riportando la macchina ai box
 
@@ -116,13 +118,13 @@ e non serve altro poichè le azioni disponibili pianificabili attraverso gli add
 
 #### Euristiche
 
-Vi sono presenti diverse euristiche (compresa quella nulla), testate nel file euristiche.pdf che permettono di visitare i nodi della pianificazione in modi differenti.
+Vi sono presenti due euristiche, testate nel file euristiche.pdf che permettono di visitare i nodi della pianificazione in modi differenti.
 
 ### Macchina
 
 L'agente è stato implementato con conoscenza incompleta in quanto la pianificazione degli spostamenti degli avversari è indipendente dalla reale posizione di questi nel mondo macchina (in quanto c'è un discorso probabilistico legato allo spostamento degli avversari nel mondo macchina).
 
-Nonostante questo non è stato necessario andare a modificare il codice di conoscenza_macchina.pl in quanto la pianificazione del pianificatore non tiene conto del fatto che sia una pianificazione in partenza della gara o una pianificazione a seguito di interruzioni nella stessa, dunque ogni volta che l'agente ritenta una pianificazione va automaticamente a ricredere vere le posizioni di partenza degli avversari controllando quelle reali del mondo macchina al momento dell'interruzione.
+Il file conoscenza_macchina.pl è stato modificato per permettere di imparare e quindi sapere/disimparare la posizione di un eventuale avversario da superare (che appare nel mondo in modo probabilistico). Una volta sollevata l'eccezione di presenza macchina di un avversario in un determinato punto e quindi la necessità di non poter usare quel punto negli spostamenti della macchina, l'agente impara la posizione di quell'avversario e la usa in pianificazione per ripianificare i suoi spostamenti da quel momento della gara alla sua fine. La posizione imparata per quell'avversario vale solo per la prima volta (in pianificazione) che si passa da quel punto (tradotto in codice sfruttando il giro attuale).
 
 #### Stati
 

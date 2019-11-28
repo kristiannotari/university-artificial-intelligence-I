@@ -211,8 +211,9 @@ stato_goal(Stato) :-
 % stato goal al planner
 piano(gareggia,Plan,Cost) :-
 	% scelta euristica
-	nb_setval(euristica, zero),
-	% nb_setval(euristica, pesata(4,4)),
+	% nb_setval(euristica, zero),
+	% nb_setval(euristica, pesata(1,1)),
+	nb_setval(euristica, pesata(4,4)),
 	plan(stato_iniziale,
 	     stato_goal,
 			     [_Sin|_Path],

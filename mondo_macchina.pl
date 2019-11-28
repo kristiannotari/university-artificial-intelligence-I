@@ -110,7 +110,7 @@ skipped(nb_setval/2).
 skipped(nb_getval/2).
 
 clear_db :-
-	consult(mondi/mondo1b), % --------------------------------------------------- caricamento del mondo scelto
+	consult(mondi/mondo2d), % --------------------------------------------------- caricamento del mondo scelto
 	retractall(in(_)),
 	retractall(usura(_)),
 	retractall(tempo(_)),

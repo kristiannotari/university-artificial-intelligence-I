@@ -11,11 +11,11 @@
 
 | Proprietà             | Mondo 1a | Mondo 1b | Mondo 2a | Mondo 2b | Mondo 2c | Mondo 2d |
 | --------------------- | -------- | -------- | -------- | -------- | -------- | -------- |
-| nodi espansi          | 924      | 51721    | -        | -        | -        | -        |
-| iterazioni            | 414      | 95820    | -        | -        | -        | -        |
+| nodi espansi          | 900      | 28706    | -        | -        | -        | -        |
+| iterazioni            | 510      | 51578    | -        | -        | -        | -        |
 | profondita' soluzione | 8        | 20       | -        | -        | -        | -        |
 | costo                 | 7        | 34       | -        | -        | -        | -        |
-| b                     | 2.3480   | 1.7206   | -        | -        | -        | -        |
+| b                     | 2.3403   | 1.6707   | -        | -        | -        | -        |
 
 ## Euristica 1: distanza ancora da percorrere (in costo)
 
@@ -23,24 +23,24 @@
 
 Calcolo la distanza (in costo) ancora da percorrere per arrivare al traguardo con la seguente formula: `numero di giri rimanenti * lunghezza giro * costo minimo traiettoria + costo minimo dalla sezione in cui mi trovo fino alla fine del giro corrente` dove la lunghezza del giro è data dal conteggio delle sezioni presenti nel circuito ed entrambi gli addendi sono pesati con dei pesi W1 e W2.
 
-L'euristica è sovrastimata e come si può vedere nel confronto tra le due seguenti tabelle, aumentare la sovrastima con pesi W1=4 e W2=4 (che portano a prestazioni migliori) comportano un risultato non ottimale per il mondo 1b, che ha la peculiarità di essere un mondo con 3 giri in un circuito breve.
+L'euristica è sottostimata (scelgo sempre quantità di tempo minima per passare dalla sezione attuale al primo traguardo disponibile nel secondo addendo di cui qui sopra) e come si può vedere nel confronto tra le due seguenti tabelle, aumentare l'impatto dell'euristica nella raimificazione con pesi W1=4 e W2=4 (che sono stati scelti con tali valori perchè portano alle prestazioni di calcolo migliori) comportano un risultato non ottimale per il mondo 1b, che ha la peculiarità di essere un mondo con 3 giri in un circuito breve.
 
 ### Risultati pesi 1, 1
 
 | Proprietà             | Mondo 1a | Mondo 1b | Mondo 2a | Mondo 2b | Mondo 2c | Mondo 2d |
 | --------------------- | -------- | -------- | -------- | -------- | -------- | -------- |
-| nodi espansi          | 44       | 13971    | 540182   | -        | -        | -        |
-| iterazioni            | 16       | 19624    | 338608   | -        | -        | -        |
-| profondita' soluzione | 8        | 20       | 23       | -        | -        | -        |
-| costo                 | 7        | 34       | 42       | -        | -        | -        |
-| b                     | 1.6048   | 1.6116   | 1.7751   | -        | -        | -        |
+| nodi espansi          | 44       | 7306     | 9864     | 408933   | -        | -        |
+| iterazioni            | 16       | 9334     | 10118    | 709206   | -        | -        |
+| profondita' soluzione | 8        | 20       | 23       | 63       | -        | -        |
+| costo                 | 7        | 34       | 33       | 178      | -        | -        |
+| b                     | 1.6048   | 1.5602   | 1.4916   | 1.2276   | -        | -        |
 
 ### Risultati pesi 4, 4
 
 | Proprietà             | Mondo 1a | Mondo 1b | Mondo 2a | Mondo 2b | Mondo 2c | Mondo 2d |
 | --------------------- | -------- | -------- | -------- | -------- | -------- | -------- |
-| nodi espansi          | 164      | 199      | 146      | 1345     | 5537     | 27157    |
-| iterazioni            | 206      | 240      | 136      | 2302     | 9712     | 47952    |
+| nodi espansi          | 164      | 254      | 159      | 1291     | 5230     | 25630    |
+| iterazioni            | 206      | 334      | 160      | 2190     | 9088     | 44848    |
 | profondita' soluzione | 8        | 19       | 22       | 64       | 207      | 1027     |
 | costo                 | 7        | 45       | 45       | 182      | 688      | 3668     |
-| b                     | 1.8917   | 1.3212   | 1.2542   | 1.1191   | 1.0425   | 1.0099   |
+| b                     | 1.8917   | 1.3383   | 1.2591   | 1.1184   | 1.0422   | 1.0099   |
